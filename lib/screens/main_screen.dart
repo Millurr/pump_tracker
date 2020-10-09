@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:grouped_list/grouped_list.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -12,14 +13,17 @@ class _MainScreenState extends State<MainScreen> {
 
   List<Widget> makeListWidget(AsyncSnapshot snapshot) {
     return snapshot.data.documents.map<Widget>((document) {
+      print('Here ' + document.data().toString());
       return ListTile(
-        title: Text(document['name']),
-        subtitle: Container(
-            child: Text("Weight: " +
-                document['weight'][0].toString() +
-                ' lbs x ' +
-                document['reps'][0].toString())),
-      );
+          title: Text(document['date']),
+          subtitle: Column(
+            children: [
+              Text(document['2020-10-08'][0]['name'].toString()),
+              Text(document['2020-10-08'][0]['weight'][0].toString() +
+                  ' lbs x ' +
+                  document['2020-10-08'][0]['reps'].length.toString())
+            ],
+          ));
     }).toList();
   }
 
@@ -31,30 +35,27 @@ class _MainScreenState extends State<MainScreen> {
     String category = "Chest";
     String date = "20201005";
 
-    FirebaseFirestore.instance
-        .collection('users/')
-        .doc(uid)
-        .collection('date')
-        .doc(date)
-        .get()
-        .then((DocumentSnapshot documentSnapshot) {
-      if (documentSnapshot.exists) {
-        print('Document data: ${documentSnapshot.data()}');
-        for (int i = 0; i < documentSnapshot.data()['parts'].length; i++) {
-          print(documentSnapshot.data()['parts'][i].toString());
-        }
-      } else {
-        print('Document does not exist on the database');
-      }
-    });
+    // FirebaseFirestore.instance
+    //     .collection('users/')
+    //     .doc(uid)
+    //     .collection('date')
+    //     .doc(date)
+    //     .get()
+    //     .then((DocumentSnapshot documentSnapshot) {
+    //   if (documentSnapshot.exists) {
+    //     print('Document data: ${documentSnapshot.data()}');
+    //     for (int i = 0; i < documentSnapshot.data()['parts'].length; i++) {
+    //       print(documentSnapshot.data()['parts'][i].toString());
+    //       arr[i] = documentSnapshot.data()['parts'][i].toString();
+    //       print("arr: " + arr[0]);
+    //     }
+    //   } else {
+    //     print('Document does not exist on the database');
+    //   }
+    // });
 
-    var userRef = FirebaseFirestore.instance.collection('users/').doc(uid);
-    var dateRef = userRef.collection('date').doc(date);
-    var workoutRef = dateRef.collection(category);
-
-    var test = dateRef.collection(category).snapshots();
-
-    print(dateRef);
+    var userRef = FirebaseFirestore.instance.collection('users').doc(uid);
+    var dateRef = userRef.collection('date');
 
     return Scaffold(
         appBar: AppBar(
@@ -98,7 +99,7 @@ class _MainScreenState extends State<MainScreen> {
         backgroundColor: Colors.red[400],
         body: Container(
             child: StreamBuilder(
-          stream: workoutRef.snapshots(),
+          stream: dateRef.snapshots(),
           builder: (context, snapshot) {
             switch (snapshot.connectionState) {
               case ConnectionState.waiting:
@@ -106,23 +107,9 @@ class _MainScreenState extends State<MainScreen> {
                   child: CircularProgressIndicator(),
                 );
               default:
-                {
-                  //var workoutDocument = snapshot.data;
-                  return StreamBuilder(
-                      stream: workoutRef.snapshots(),
-                      builder: (context, snapshot2) {
-                        switch (snapshot2.connectionState) {
-                          case ConnectionState.waiting:
-                            return Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          default:
-                            return ListView(
-                              children: makeListWidget(snapshot2),
-                            );
-                        }
-                      });
-                }
+                return ListView(
+                  children: makeListWidget(snapshot),
+                );
             }
           },
         )));
