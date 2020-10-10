@@ -32,83 +32,151 @@ class _MainScreenState extends State<MainScreen> {
     final User user = _auth.currentUser;
     final String uid = user.uid;
 
-    String category = "Chest";
-    String date = "20201005";
-
-    // FirebaseFirestore.instance
-    //     .collection('users/')
-    //     .doc(uid)
-    //     .collection('date')
-    //     .doc(date)
-    //     .get()
-    //     .then((DocumentSnapshot documentSnapshot) {
-    //   if (documentSnapshot.exists) {
-    //     print('Document data: ${documentSnapshot.data()}');
-    //     for (int i = 0; i < documentSnapshot.data()['parts'].length; i++) {
-    //       print(documentSnapshot.data()['parts'][i].toString());
-    //       arr[i] = documentSnapshot.data()['parts'][i].toString();
-    //       print("arr: " + arr[0]);
-    //     }
-    //   } else {
-    //     print('Document does not exist on the database');
-    //   }
-    // });
+    String date = "2020-10-08";
 
     var userRef = FirebaseFirestore.instance.collection('users').doc(uid);
     var dateRef = userRef.collection('date');
+    var targetRef = dateRef.doc(date).collection('target');
 
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.grey[900],
           title: Text(
-            "Home",
-            style: TextStyle(color: Colors.white, fontSize: 28),
+            date,
+            style: TextStyle(color: Colors.white, fontSize: 16),
           ),
+          actions: [
+            Padding(padding: EdgeInsets.all(15.0), child: Icon(Icons.add))
+          ],
         ),
         drawer: Drawer(
-          child: ListView(
-            children: <Widget>[
-              DrawerHeader(
-                child: Text("This is the drawer header"),
-              ),
-              ListTile(
-                title: Text("1"),
-              ),
-              ListTile(
-                title: Text("2"),
-              ),
-              ListTile(
-                title: Text("3"),
-              ),
-              ListTile(
-                title: Text("4"),
-              ),
-              RaisedButton(
-                onPressed: () async {
-                  await _auth.signOut().then((value) {});
-                },
-                color: Colors.grey[900],
-                child: Text(
-                  "Sign Out",
-                  style: TextStyle(color: Colors.white),
+          child: Container(
+            color: Colors.grey[900],
+            child: ListView(
+              children: <Widget>[
+                Container(
+                  color: Colors.grey[900],
+                  child: DrawerHeader(
+                    child: Center(
+                        child: Text(
+                      "Pump Tracker",
+                      style: TextStyle(color: Colors.red[400], fontSize: 28),
+                    )),
+                  ),
                 ),
-              ),
-            ],
+                Container(
+                  color: Colors.grey[900],
+                  child: ListTile(
+                    onTap: () {},
+                    //leading: Icon(Icons.home),
+                    title: Center(
+                      child: Text(
+                        "Home",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  color: Colors.grey[900],
+                  child: ListTile(
+                    onTap: () {},
+                    //leading: Icon(Icons.calendar_today),
+                    title: Center(
+                        child: Text(
+                      "Calendar",
+                      style: TextStyle(color: Colors.white),
+                    )),
+                  ),
+                ),
+                Container(
+                  color: Colors.grey[900],
+                  child: ListTile(
+                    onTap: () {},
+                    //leading: Icon(Icons.bar_chart),
+                    title: Center(
+                        child: Text(
+                      "Progress Chart",
+                      style: TextStyle(color: Colors.white),
+                    )),
+                  ),
+                ),
+                RaisedButton(
+                  onPressed: () async {
+                    await _auth.signOut().then((value) {});
+                  },
+                  color: Colors.grey[900],
+                  child: Text(
+                    "Sign Out",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                Container(
+                  color: Colors.red[400],
+                )
+              ],
+            ),
           ),
         ),
         backgroundColor: Colors.red[400],
         body: Container(
             child: StreamBuilder(
-          stream: dateRef.snapshots(),
+          stream: targetRef.snapshots(),
           builder: (context, snapshot) {
             switch (snapshot.connectionState) {
               case ConnectionState.waiting:
                 return Center(
-                  child: CircularProgressIndicator(),
+                  child: CircularProgressIndicator(
+                    backgroundColor: Colors.grey[900],
+                  ),
                 );
               default:
-                return ListView(
-                  children: makeListWidget(snapshot),
+                return GroupedListView<dynamic, String>(
+                  elements: snapshot.data.documents,
+                  groupBy: (element) => element['target'],
+                  groupComparator: (value1, value2) => value2.compareTo(value1),
+                  itemComparator: (item1, item2) =>
+                      item1['name'].compareTo(item2['name']),
+                  order: GroupedListOrder.DESC,
+                  useStickyGroupSeparators: false,
+                  groupSeparatorBuilder: (String value) => Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Card(
+                      elevation: 10.0,
+                      margin: new EdgeInsets.symmetric(horizontal: 50.0),
+                      color: Colors.red[400],
+                      child: Text(
+                        value,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[900]),
+                      ),
+                    ),
+                  ),
+                  itemBuilder: (c, element) {
+                    return Card(
+                      elevation: 8.0,
+                      color: Colors.grey[900],
+                      margin: new EdgeInsets.symmetric(
+                          horizontal: 10.0, vertical: 6.0),
+                      child: Container(
+                        child: ListTile(
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20.0, vertical: 2.0),
+                          title: Text(
+                            element['name'],
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          trailing: Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 );
             }
           },
