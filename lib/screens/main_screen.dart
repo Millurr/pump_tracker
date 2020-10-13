@@ -27,24 +27,57 @@ class _MainScreenState extends State<MainScreen> {
     }).toList();
   }
 
+  DateTime selectedDate = DateTime.now();
+  String date = "2020-10-08";
+
   @override
   Widget build(BuildContext context) {
     final User user = _auth.currentUser;
     final String uid = user.uid;
 
-    String date = "2020-10-08";
-
     var userRef = FirebaseFirestore.instance.collection('users').doc(uid);
     var dateRef = userRef.collection('date');
     var targetRef = dateRef.doc(date).collection('target');
 
+    setState(() {
+      date = selectedDate.toString().split(" ")[0];
+    });
+
+    _selectedDate(BuildContext context) async {
+      final DateTime picked = await showDatePicker(
+        context: context,
+        initialDate: selectedDate, // Refer step 1
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2025),
+        builder: (context, child) {
+          return Theme(  
+            data: ThemeData.dark(),
+            child: child,
+          );
+        }
+      );
+      if (picked != null && picked != selectedDate)
+        setState(() {
+          selectedDate = picked;
+          print(selectedDate.toString().split(" ")[0]);
+          date = selectedDate.toString().split(" ")[0];
+        });
+    }
+
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.grey[900],
-          title: Text(
-            date,
-            style: TextStyle(color: Colors.white, fontSize: 16),
-          ),
+          title: FlatButton.icon(
+              icon: Icon(
+                Icons.arrow_drop_down,
+                color: Colors.white,
+              ),
+              label: Text(
+                selectedDate.month.toString() + '/' + selectedDate.day.toString() + '/' + selectedDate.year.toString(),
+                style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
+              onPressed: () => _selectedDate(context),
+            ),
           actions: [
             Padding(padding: EdgeInsets.all(15.0), child: Icon(Icons.add))
           ],
