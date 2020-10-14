@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:grouped_list/grouped_list.dart';
+import 'package:pump_tracker/screens/add_form.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -45,17 +46,16 @@ class _MainScreenState extends State<MainScreen> {
 
     _selectedDate(BuildContext context) async {
       final DateTime picked = await showDatePicker(
-        context: context,
-        initialDate: selectedDate, // Refer step 1
-        firstDate: DateTime(2000),
-        lastDate: DateTime(2025),
-        builder: (context, child) {
-          return Theme(  
-            data: ThemeData.dark(),
-            child: child,
-          );
-        }
-      );
+          context: context,
+          initialDate: selectedDate, // Refer step 1
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2025),
+          builder: (context, child) {
+            return Theme(
+              data: ThemeData.dark(),
+              child: child,
+            );
+          });
       if (picked != null && picked != selectedDate)
         setState(() {
           selectedDate = picked;
@@ -64,22 +64,42 @@ class _MainScreenState extends State<MainScreen> {
         });
     }
 
+    void _showAddPanel(String date) {
+      showModalBottomSheet(
+          // isScrollControlled: true,
+          // enableDrag: false,
+          context: context,
+          builder: (context) {
+            return Container(
+              padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 60.0),
+              child: AddForm(date: date),
+            );
+          });
+    }
+
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.grey[900],
           title: FlatButton.icon(
-              icon: Icon(
-                Icons.arrow_drop_down,
-                color: Colors.white,
-              ),
-              label: Text(
-                selectedDate.month.toString() + '/' + selectedDate.day.toString() + '/' + selectedDate.year.toString(),
-                style: TextStyle(color: Colors.white, fontSize: 20),
-                ),
-              onPressed: () => _selectedDate(context),
+            icon: Icon(
+              Icons.arrow_drop_down,
+              color: Colors.white,
             ),
+            label: Text(
+              selectedDate.month.toString() +
+                  '/' +
+                  selectedDate.day.toString() +
+                  '/' +
+                  selectedDate.year.toString(),
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () => _selectedDate(context),
+          ),
           actions: [
-            Padding(padding: EdgeInsets.all(15.0), child: Icon(Icons.add))
+            IconButton(
+              icon: Icon(Icons.add),
+              onPressed: () => _showAddPanel(date),
+            )
           ],
         ),
         drawer: Drawer(
@@ -189,22 +209,31 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                   ),
                   itemBuilder: (c, element) {
+                    //print("Id: " + element.documentID);
                     return Card(
                       elevation: 8.0,
                       color: Colors.grey[900],
                       margin: new EdgeInsets.symmetric(
-                          horizontal: 10.0, vertical: 6.0),
+                          horizontal: 5.0, vertical: 6.0),
                       child: Container(
                         child: ListTile(
+                          leading: IconButton(
+                            icon: Icon(Icons.grid_view),
+                            color: Colors.white,
+                            onPressed: () {},
+                          ),
                           contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20.0, vertical: 2.0),
+                              horizontal: 15.0, vertical: 2.0),
                           title: Text(
                             element['name'],
                             style: TextStyle(color: Colors.white),
                           ),
-                          trailing: Icon(
-                            Icons.arrow_forward,
-                            color: Colors.white,
+                          trailing: IconButton(
+                            icon: Icon(
+                              Icons.edit,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {},
                           ),
                         ),
                       ),
