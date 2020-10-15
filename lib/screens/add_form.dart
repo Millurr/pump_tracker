@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 
 class AddForm extends StatefulWidget {
   final String date;
@@ -28,13 +29,14 @@ class _AddFormState extends State<AddForm> {
   ];
   final List<int> setSets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-  List<TextFormField> reps = new List<TextFormField>(1);
-  List<TextFormField> weights = new List<TextFormField>(1);
+  List<TextFormField> reps = new List<TextFormField>(0);
+  List<TextFormField> weights = new List<TextFormField>(0);
 
   // form values
   String _currentName, _currentCategory;
   List<int> sets;
   List<int> weight;
+  int _setValue = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -52,8 +54,6 @@ class _AddFormState extends State<AddForm> {
         sets = new List<int>(i);
         weight = new List<int>(i);
       });
-      reps = new List<TextFormField>(i);
-      weights = new List<TextFormField>(i);
     }
 
     List<Widget> makeListWidget() {
@@ -71,11 +71,15 @@ class _AddFormState extends State<AddForm> {
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: TextFormField(
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        keyboardType: TextInputType.number,
                         decoration: InputDecoration(hintText: "Reps"),
-                        validator: (value) =>
-                            value == null ? 'Missing entry' : null,
                         onChanged: (val) =>
                             setState(() => sets[i] = int.parse(val)),
+                        validator: (value) =>
+                            value == null ? 'Missing Entry' : null,
                       ),
                     ))),
             Expanded(
@@ -84,11 +88,15 @@ class _AddFormState extends State<AddForm> {
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: TextFormField(
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        keyboardType: TextInputType.number,
                         decoration: InputDecoration(hintText: "Weight"),
-                        validator: (value) =>
-                            value == null ? 'Missing entry' : null,
                         onChanged: (val) =>
                             setState(() => weight[i] = int.parse(val)),
+                        validator: (value) =>
+                            value == null ? 'Missing Entry' : null,
                       ),
                     ))),
           ],
@@ -129,15 +137,19 @@ class _AddFormState extends State<AddForm> {
             height: 20.0,
           ),
           DropdownButtonFormField(
-            // validator: (val) =>
-            //     val.toString().isEmpty ? 'Please select number of sets' : null,
-            hint: Text("1 set"),
+            validator: (val) =>
+                val == null ? 'Please select number of sets' : null,
+            hint: Text("Select number # of sets"),
+            //value: _setValue,
             items: setSets.map((sets) {
               return DropdownMenuItem(
                   value: sets,
                   child: Text(sets == 1 ? '$sets set' : '$sets sets'));
             }).toList(),
             onChanged: (val) {
+              setState(() {
+                _setValue = val;
+              });
               _setSetsList(val);
             },
           ),
