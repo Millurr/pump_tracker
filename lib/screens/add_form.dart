@@ -47,6 +47,8 @@ class _AddFormState extends State<AddForm> {
     var dateRef = userRef.collection('date');
     var targetRef = dateRef.doc(widget.date).collection('target');
 
+    print(uid);
+
     _setSetsList(int i) {
       setState(() {
         reps = new List<TextFormField>(i);

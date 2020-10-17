@@ -20,6 +20,11 @@ class _EditFormState extends State<EditForm> {
 
   String name = '';
 
+  var weights = new List<dynamic>();
+  var sets = new List<dynamic>();
+
+  int reps, weight;
+
   @override
   Widget build(BuildContext context) {
     final User user = _auth.currentUser;
@@ -28,115 +33,154 @@ class _EditFormState extends State<EditForm> {
     var workoutData = widget.doc.data();
 
     // String name = workoutData['name'];
-    List<int> weights = List<int>(workoutData['weight'].length);
-    List<int> sets = List<int>(workoutData['reps'].length);
 
-    print(workoutData);
+    //initState();
 
-    // FirebaseFirestore.instance
-    //     .collection('users')
-    //     .doc(uid)
-    //     .collection('date')
-    //     .doc(widget.date)
-    //     .collection('target')
-    //     .doc(widget.id)
-    //     .get()
-    //     .then((DocumentSnapshot documnetSnapshot) {
-    //   if (documnetSnapshot.exists) {
-    //     print('Document data ${documnetSnapshot.data()}');
-    //   } else {
-    //     print("No data.");
-    //   }
-    // });
+    updateSets() {}
 
-    List<Widget> _makeFormWidget() {
-      return sets.asMap().entries.map<Widget>((document) {
-        int i = document.key;
-        int displayIndex = i + 1;
-        return Row(
-          children: [
-            Expanded(
-              child: Text(displayIndex.toString()),
-            ),
-            Expanded(
-                child: SizedBox(
-                    width: 20,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: TextFormField(
-                        initialValue: workoutData['reps'][i].toString(),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(hintText: "Reps"),
-                        onChanged: (val) =>
-                            setState(() => sets[i] = int.parse(val)),
-                        validator: (value) =>
-                            value == null ? 'Missing Entry' : null,
+    var targetRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('date')
+        .doc(widget.date)
+        .collection('target')
+        .doc(widget.id);
+
+    targetRef.get().then((DocumentSnapshot documentSnapshot) {
+      if (documentSnapshot.exists) {
+        print('Document data ${documentSnapshot.data()}');
+        setState(() {
+          weights = documentSnapshot.data()['weight'];
+          sets = documentSnapshot.data()['reps'];
+        });
+      } else {
+        print("No data.");
+      }
+    });
+
+    Container _makeFormWidget() {
+      return Container(
+        height: 200,
+        child: ListView.builder(
+            itemCount: sets.length,
+            itemBuilder: (context, index) {
+              int displayIndex = index + 1;
+              return Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Text("Set " + (displayIndex).toString()),
+                        ),
                       ),
-                    ))),
-            Expanded(
-                child: SizedBox(
-                    width: 20,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: TextFormField(
-                        initialValue: workoutData['weight'][i].toString(),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(hintText: "Weight"),
-                        onChanged: (val) =>
-                            setState(() => weights[i] = int.parse(val)),
-                        validator: (value) =>
-                            value == null ? 'Missing Entry' : null,
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: TextFormField(
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            keyboardType: TextInputType.number,
+                            initialValue: sets[index].toString(),
+                            onChanged: (input) {
+                              setState(() {
+                                reps = int.parse(input);
+                              });
+                            },
+                          ),
+                        ),
                       ),
-                    ))),
-            Expanded(
-                child: SizedBox(
-                    width: 20,
-                    child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: RaisedButton(
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: TextFormField(
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            keyboardType: TextInputType.number,
+                            initialValue: weights[index].toString(),
+                            onChanged: (input) {
+                              setState(() {
+                                weight = int.parse(input);
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: FlatButton(
                           child: Icon(Icons.delete),
-                          color: Colors.red,
-                          onPressed: () {
-                            setState(() {
-                              weights.removeAt(i);
-                              sets.removeAt(i);
-                            });
+                          onPressed: () async {
+                            sets.removeAt(index);
+                            weights.removeAt(index);
+                            await targetRef
+                                .update({'reps': sets, 'weight': weights});
                           },
-                        )))),
-          ],
-        );
-      }).toList();
+                        ),
+                      ),
+                    ],
+                  ),
+                  index == sets.length - 1
+                      ? Container(
+                          child: RaisedButton(
+                            color: Theme.of(context).accentColor,
+                            child: Icon(Icons.add),
+                            onPressed: () async {
+                              sets.add(0);
+                              weights.add(0);
+                              await targetRef
+                                  .update({'reps': sets, 'weight': weights});
+                            },
+                          ),
+                        )
+                      : Container(
+                          height: 10,
+                          width: 20,
+                          child: Divider(),
+                        )
+                ],
+              );
+            }),
+      );
     }
 
-    return Container(
-        child: Form(
-      key: _formKey,
-      child: ListView(
-        children: [
-          Center(
-              child: Text(
-            "Update " + workoutData['name'],
-            style: TextStyle(fontSize: 18.0),
-          )),
-          TextFormField(
-            initialValue: workoutData['name'],
-            onChanged: (input) {
-              setState(() {
-                name = input;
-              });
-            },
-          ),
-          Column(
-            children: _makeFormWidget(),
-          )
-        ],
-      ),
-    ));
+    return StreamBuilder<Object>(
+        stream: targetRef.snapshots(),
+        builder: (context, snapshot) {
+          return Container(
+              child: Form(
+            key: _formKey,
+            child: ListView(
+              children: [
+                Center(
+                    child: Text(
+                  "Update " + workoutData['name'],
+                  style: TextStyle(fontSize: 18.0),
+                )),
+                _makeFormWidget(),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: RaisedButton(
+                          color: Theme.of(context).accentColor,
+                          child: Text('Update'),
+                          onPressed: () async {
+                            await targetRef
+                                .update({'sets': sets, 'weight': weights});
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                    )
+                  ],
+                )
+              ],
+            ),
+          ));
+        });
   }
 }
