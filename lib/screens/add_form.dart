@@ -159,7 +159,7 @@ class _AddFormState extends State<AddForm> {
             children: makeListWidget(),
           ),
           RaisedButton(
-            color: Colors.red[400],
+            color: Theme.of(context).accentColor,
             child: Text(
               'Add',
               style: TextStyle(color: Colors.white),

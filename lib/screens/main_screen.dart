@@ -114,9 +114,9 @@ class _MainScreenState extends State<MainScreen> {
         title: _selectedIndex == 0
             ? Text(
                 selectedDate.month.toString() +
-                    '/' +
+                    '-' +
                     selectedDate.day.toString() +
-                    '/' +
+                    '-' +
                     selectedDate.year.toString(),
                 style: TextStyle(color: Colors.white, fontSize: 20),
               )
@@ -144,68 +144,78 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                     );
                   default:
-                    return GroupedListView<dynamic, String>(
-                      elements: snapshot.data.documents,
-                      groupBy: (element) => element['target'],
-                      groupComparator: (value1, value2) =>
-                          value2.compareTo(value1),
-                      itemComparator: (item1, item2) =>
-                          item1['name'].compareTo(item2['name']),
-                      order: GroupedListOrder.DESC,
-                      useStickyGroupSeparators: false,
-                      groupSeparatorBuilder: (String value) => Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Card(
-                          elevation: 10.0,
-                          margin: new EdgeInsets.symmetric(horizontal: 50.0),
-                          color: Theme.of(context).accentColor,
-                          child: Text(
-                            value,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey[900]),
-                          ),
-                        ),
-                      ),
-                      itemBuilder: (c, element) {
-                        //print("Id: " + element.documentID);
-                        return Card(
-                          elevation: 8.0,
-                          color: Theme.of(context).primaryColor,
-                          margin: new EdgeInsets.symmetric(
-                              horizontal: 5.0, vertical: 6.0),
-                          child: Container(
-                            child: ListTile(
-                              leading: IconButton(
-                                icon: Icon(Icons.grid_view),
-                                color: Colors.white,
-                                onPressed: () {},
-                              ),
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 15.0, vertical: 2.0),
-                              title: Text(
-                                element['name'],
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              trailing: IconButton(
-                                icon: Icon(
-                                  Icons.edit,
-                                  color: Colors.white,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    docID = element.documentID;
-                                  });
-                                  _showEditPanel(date, docID, element);
-                                },
-                              ),
+                    if (snapshot.data.documents.length > 0) {
+                      return GroupedListView<dynamic, String>(
+                        elements: snapshot.data.documents,
+                        groupBy: (element) => element['target'],
+                        groupComparator: (value1, value2) =>
+                            value2.compareTo(value1),
+                        itemComparator: (item1, item2) =>
+                            item1['name'].compareTo(item2['name']),
+                        order: GroupedListOrder.DESC,
+                        useStickyGroupSeparators: false,
+                        groupSeparatorBuilder: (String value) => Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Card(
+                            elevation: 10.0,
+                            margin: new EdgeInsets.symmetric(horizontal: 50.0),
+                            color: Theme.of(context).accentColor,
+                            child: Text(
+                              value,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[900]),
                             ),
                           ),
-                        );
-                      },
-                    );
+                        ),
+                        itemBuilder: (c, element) {
+                          print("Id: " + element.documentID);
+                          return Card(
+                            elevation: 8.0,
+                            color: Theme.of(context).primaryColor,
+                            margin: new EdgeInsets.symmetric(
+                                horizontal: 5.0, vertical: 6.0),
+                            child: Container(
+                              child: ListTile(
+                                leading: IconButton(
+                                  icon: Icon(Icons.grid_view),
+                                  color: Colors.white,
+                                  onPressed: () {},
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 15.0, vertical: 2.0),
+                                title: Text(
+                                  element['name'],
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                trailing: IconButton(
+                                  icon: Icon(
+                                    Icons.edit,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      docID = element.documentID;
+                                    });
+                                    _showEditPanel(date, docID, element);
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    } else {
+                      return Center(
+                          child: Text(
+                        "No data for this day",
+                        style: TextStyle(
+                            fontSize: 24,
+                            color: Theme.of(context).primaryColor),
+                      ));
+                    }
                 }
               },
             ))

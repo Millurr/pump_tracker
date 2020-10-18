@@ -16,7 +16,7 @@ class EditForm extends StatefulWidget {
 class _EditFormState extends State<EditForm> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  final _formKey = GlobalKey<FormState>();
+  static final _formKey = GlobalKey<FormState>();
 
   String name = '';
 
@@ -24,19 +24,16 @@ class _EditFormState extends State<EditForm> {
   var sets = new List<dynamic>();
 
   int reps, weight;
+  int i = 0;
+
+  var submitSetsArr, submitWeightsArr;
+
+  bool deletePressed = false;
 
   @override
   Widget build(BuildContext context) {
     final User user = _auth.currentUser;
     final String uid = user.uid;
-
-    var workoutData = widget.doc.data();
-
-    // String name = workoutData['name'];
-
-    //initState();
-
-    updateSets() {}
 
     var targetRef = FirebaseFirestore.instance
         .collection('users')
@@ -46,23 +43,11 @@ class _EditFormState extends State<EditForm> {
         .collection('target')
         .doc(widget.id);
 
-    targetRef.get().then((DocumentSnapshot documentSnapshot) {
-      if (documentSnapshot.exists) {
-        print('Document data ${documentSnapshot.data()}');
-        setState(() {
-          weights = documentSnapshot.data()['weight'];
-          sets = documentSnapshot.data()['reps'];
-        });
-      } else {
-        print("No data.");
-      }
-    });
-
-    Container _makeFormWidget() {
+    Container _makeFormWidget(var arrSets, var arrWeights) {
       return Container(
-        height: 200,
+        height: 300,
         child: ListView.builder(
-            itemCount: sets.length,
+            itemCount: arrSets.length,
             itemBuilder: (context, index) {
               int displayIndex = index + 1;
               return Column(
@@ -83,11 +68,19 @@ class _EditFormState extends State<EditForm> {
                               FilteringTextInputFormatter.digitsOnly
                             ],
                             keyboardType: TextInputType.number,
-                            initialValue: sets[index].toString(),
-                            onChanged: (input) {
+                            key: deletePressed
+                                ? Key(arrSets[index].toString())
+                                : null,
+                            initialValue: arrSets[index].toString(),
+                            validator: (value) =>
+                                value == null ? 'Missing Entry' : null,
+                            onChanged: (input) async {
                               setState(() {
                                 reps = int.parse(input);
                               });
+                              arrSets[index] = int.parse(input);
+                              await targetRef.update({'reps': arrSets});
+                              // print(arrSets[index]);
                             },
                           ),
                         ),
@@ -100,11 +93,21 @@ class _EditFormState extends State<EditForm> {
                               FilteringTextInputFormatter.digitsOnly
                             ],
                             keyboardType: TextInputType.number,
-                            initialValue: weights[index].toString(),
-                            onChanged: (input) {
+                            key: deletePressed
+                                ? Key(arrWeights[index].toString())
+                                : null,
+                            initialValue: arrWeights[index].toString(),
+                            validator: (value) =>
+                                value == null ? 'Missing Entry' : null,
+                            onChanged: (input) async {
                               setState(() {
                                 weight = int.parse(input);
+                                // submitWeightsArr[index] = int.parse(input);
                               });
+                              // print(arrWeights);
+                              arrWeights[index] = int.parse(input);
+                              //print(arrWeights[index]);
+                              await targetRef.update({'weight': arrWeights});
                             },
                           ),
                         ),
@@ -113,25 +116,31 @@ class _EditFormState extends State<EditForm> {
                         child: FlatButton(
                           child: Icon(Icons.delete),
                           onPressed: () async {
-                            sets.removeAt(index);
-                            weights.removeAt(index);
-                            await targetRef
-                                .update({'reps': sets, 'weight': weights});
+                            setState(() {
+                              deletePressed = true;
+                            });
+                            arrSets.removeAt(index);
+                            arrWeights.removeAt(index);
+                            await targetRef.update(
+                                {'reps': arrSets, 'weight': arrWeights});
+                            setState(() {
+                              deletePressed = false;
+                            });
                           },
                         ),
                       ),
                     ],
                   ),
-                  index == sets.length - 1
+                  index == arrSets.length - 1
                       ? Container(
                           child: RaisedButton(
                             color: Theme.of(context).accentColor,
                             child: Icon(Icons.add),
                             onPressed: () async {
-                              sets.add(0);
-                              weights.add(0);
-                              await targetRef
-                                  .update({'reps': sets, 'weight': weights});
+                              arrSets.add(0);
+                              arrWeights.add(0);
+                              await targetRef.update(
+                                  {'reps': arrSets, 'weight': arrWeights});
                             },
                           ),
                         )
@@ -139,48 +148,81 @@ class _EditFormState extends State<EditForm> {
                           height: 10,
                           width: 20,
                           child: Divider(),
-                        )
+                        ),
+                  // index == arrSets.length - 1
+                  //     ? Container(
+                  //         child: Padding(
+                  //           padding: EdgeInsets.all(8.0),
+                  //           child: RaisedButton(
+                  //             color: Theme.of(context).accentColor,
+                  //             child: Text('Update'),
+                  //             onPressed: () async {
+                  //               print(arrSets);
+                  //               if (_formKey.currentState.validate()) {
+                  //                 print(arrSets);
+                  //                 print(arrWeights);
+                  //                 await targetRef.update(
+                  //                     {'reps': arrSets, 'weight': arrWeights});
+                  //                 //Navigator.pop(context);
+                  //               } else {
+                  //                 print("Couldn't post");
+                  //               }
+                  //             },
+                  //           ),
+                  //         ),
+                  //       )
+                  //     : Container(
+                  //         height: 10,
+                  //         width: 20,
+                  //         child: Divider(),
+                  //       ),
                 ],
               );
             }),
       );
     }
 
-    return StreamBuilder<Object>(
+    return StreamBuilder<DocumentSnapshot>(
         stream: targetRef.snapshots(),
         builder: (context, snapshot) {
-          return Container(
-              child: Form(
-            key: _formKey,
-            child: ListView(
-              children: [
-                Center(
+          if (snapshot.hasData) {
+            var data = snapshot.data;
+            return Container(
+                child: Form(
+              key: _formKey,
+              child: ListView(
+                children: [
+                  Center(
                     child: Text(
-                  "Update " + workoutData['name'],
-                  style: TextStyle(fontSize: 18.0),
-                )),
-                _makeFormWidget(),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: RaisedButton(
-                          color: Theme.of(context).accentColor,
-                          child: Text('Update'),
-                          onPressed: () async {
-                            await targetRef
-                                .update({'sets': sets, 'weight': weights});
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ),
-                    )
-                  ],
-                )
-              ],
-            ),
-          ));
+                      "Update " + data['name'],
+                      style: TextStyle(fontSize: 18.0),
+                    ),
+                  ),
+                  _makeFormWidget(data['reps'], data['weight']),
+                  // Row(
+                  //   children: [
+                  //     Expanded(
+                  //       child: Padding(
+                  //         padding: EdgeInsets.all(8.0),
+                  //         child: RaisedButton(
+                  //           color: Theme.of(context).accentColor,
+                  //           child: Text('Update'),
+                  //           onPressed: () async {
+                  //             await targetRef
+                  //                 .update({'sets': sets, 'weight': weights});
+                  //             Navigator.pop(context);
+                  //           },
+                  //         ),
+                  //       ),
+                  //     )
+                  //   ],
+                  // )
+                ],
+              ),
+            ));
+          } else {
+            return CircularProgressIndicator();
+          }
         });
   }
 }
