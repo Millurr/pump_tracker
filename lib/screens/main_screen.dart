@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:grouped_list/grouped_list.dart';
 import 'package:pump_tracker/screens/add_form.dart';
 import 'package:pump_tracker/screens/calendar_screen.dart';
@@ -51,19 +52,25 @@ class _MainScreenState extends State<MainScreen> {
     _selectedDate(BuildContext context) async {
       final DateTime picked = await showDatePicker(
           context: context,
-          initialDate: selectedDate, // Refer step 1
-          firstDate: DateTime(2000),
-          lastDate: DateTime(2025),
+          initialDate: selectedDate,
+          firstDate: DateTime(2018),
+          lastDate: DateTime(2030),
           builder: (context, child) {
             return Theme(
-              data: ThemeData.dark(),
+              data: ThemeData.dark().copyWith(
+                primaryColor: const Color(0xFF8CE7F1),
+                accentColor: const Color(0xFF8CE7F1),
+                colorScheme:
+                    ColorScheme.dark(primary: Theme.of(context).accentColor),
+                buttonTheme:
+                    ButtonThemeData(textTheme: ButtonTextTheme.primary),
+              ),
               child: child,
             );
           });
       if (picked != null && picked != selectedDate)
         setState(() {
           selectedDate = picked;
-          print(selectedDate.toString().split(" ")[0]);
           date = selectedDate.toString().split(" ")[0];
         });
     }
@@ -90,12 +97,92 @@ class _MainScreenState extends State<MainScreen> {
           });
     }
 
+    Padding _showDetails(var arrSets, var arrWeights) {
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Container(
+          height: 40 * arrSets.length.toDouble(),
+          color: Colors.grey[800],
+          child: ListView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: arrSets.length,
+              itemBuilder: (context, index) {
+                // print(arrSets);
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Card(
+                            color: Colors.grey[800],
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Center(
+                                child: Text(
+                                  arrSets[index].toString() +
+                                      " x " +
+                                      arrWeights[index].toString() +
+                                      " lbs",
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              }),
+        ),
+      );
+    }
+
+    // set up the buttons
+    Widget cancelButton = FlatButton(
+      child: Text("Cancel"),
+      onPressed: () {
+        setState(() {
+          _selectedIndex = 0;
+          Navigator.pop(context);
+        });
+      },
+    );
+    Widget continueButton = FlatButton(
+      child: Text("Continue"),
+      onPressed: () async {
+        await _auth.signOut();
+        Navigator.pop(context);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Sign Out"),
+      content: Text("Are you sure you want to sign out?"),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    void showConfirmation() {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return alert;
+        },
+      );
+    }
+
     void _onTapped(int index) async {
       setState(() {
         _selectedIndex = index;
       });
       if (_selectedIndex == 3) {
-        await _auth.signOut();
+        showConfirmation();
+        //await _auth.signOut();
       }
     }
 
@@ -154,55 +241,64 @@ class _MainScreenState extends State<MainScreen> {
                             item1['name'].compareTo(item2['name']),
                         order: GroupedListOrder.DESC,
                         useStickyGroupSeparators: false,
-                        groupSeparatorBuilder: (String value) => Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Card(
-                            elevation: 10.0,
-                            margin: new EdgeInsets.symmetric(horizontal: 50.0),
-                            color: Theme.of(context).accentColor,
-                            child: Text(
-                              value,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[900]),
-                            ),
+                        groupSeparatorBuilder: (String value) => Card(
+                          elevation: 10.0,
+                          // margin: new EdgeInsets.symmetric(horizontal: 50.0),
+                          color: Theme.of(context).accentColor,
+                          child: Text(
+                            value,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[900]),
                           ),
                         ),
                         itemBuilder: (c, element) {
-                          print("Id: " + element.documentID);
-                          return Card(
-                            elevation: 8.0,
-                            color: Theme.of(context).primaryColor,
-                            margin: new EdgeInsets.symmetric(
-                                horizontal: 5.0, vertical: 6.0),
-                            child: Container(
-                              child: ListTile(
-                                leading: IconButton(
-                                  icon: Icon(Icons.grid_view),
-                                  color: Colors.white,
-                                  onPressed: () {},
-                                ),
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 15.0, vertical: 2.0),
-                                title: Text(
-                                  element['name'],
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                trailing: IconButton(
-                                  icon: Icon(
-                                    Icons.edit,
-                                    color: Colors.white,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      docID = element.documentID;
-                                    });
-                                    _showEditPanel(date, docID, element);
+                          return SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                Dismissible(
+                                  key: Key(element.documentID),
+                                  onDismissed: (direction) async {
+                                    print(direction.index);
+                                    await targetRef
+                                        .doc(element.documentID)
+                                        .delete();
                                   },
+                                  child: Card(
+                                    elevation: 8.0,
+                                    color: Theme.of(context).primaryColor,
+                                    child: Container(
+                                      child: ListTile(
+                                        title: Text(
+                                          element['name'],
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        trailing: IconButton(
+                                          icon: Icon(
+                                            Icons.edit,
+                                            color: Colors.white,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              docID = element.documentID;
+                                            });
+                                            _showEditPanel(
+                                                date, docID, element);
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                SingleChildScrollView(
+                                  child: Column(children: [
+                                    _showDetails(
+                                        element['reps'], element['weight'])
+                                  ]),
+                                )
+                              ],
                             ),
                           );
                         },
@@ -221,6 +317,7 @@ class _MainScreenState extends State<MainScreen> {
             ))
           : _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Theme.of(context).primaryColor,
         unselectedItemColor: Colors.white,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),

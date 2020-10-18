@@ -9,11 +9,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(new MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: "FlutterFire App",
       theme: ThemeData(
           brightness: Brightness.dark,
+          accentColorBrightness: Brightness.dark,
           primaryColor: Colors.grey[900],
-          accentColor: Colors.blue[400],
+          accentColor: Colors.red[400],
           textTheme: TextTheme(
               headline1: TextStyle(color: Colors.white, fontSize: 20),
               headline2: TextStyle(color: Colors.red[400], fontSize: 28),
@@ -27,7 +29,7 @@ Widget _handleWindowDisplay() {
       builder: (BuildContext context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(
-            child: Text("Loading"),
+            child: CircularProgressIndicator(),
           );
         } else {
           if (snapshot.hasData) {
