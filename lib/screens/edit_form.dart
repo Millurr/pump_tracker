@@ -6,8 +6,9 @@ import 'package:flutter/services.dart';
 class EditForm extends StatefulWidget {
   final String date, id;
   final doc;
+  final targetRef;
 
-  const EditForm({this.date, this.id, this.doc});
+  const EditForm({this.date, this.id, this.doc, this.targetRef});
 
   @override
   _EditFormState createState() => _EditFormState();
@@ -35,13 +36,7 @@ class _EditFormState extends State<EditForm> {
     final User user = _auth.currentUser;
     final String uid = user.uid;
 
-    var targetRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .collection('date')
-        .doc(widget.date)
-        .collection('target')
-        .doc(widget.id);
+    var targetRef = widget.targetRef.doc(widget.id);
 
     Container _makeFormWidget(var arrSets, var arrWeights) {
       return Container(
@@ -149,33 +144,6 @@ class _EditFormState extends State<EditForm> {
                           width: 20,
                           child: Divider(),
                         ),
-                  // index == arrSets.length - 1
-                  //     ? Container(
-                  //         child: Padding(
-                  //           padding: EdgeInsets.all(8.0),
-                  //           child: RaisedButton(
-                  //             color: Theme.of(context).accentColor,
-                  //             child: Text('Update'),
-                  //             onPressed: () async {
-                  //               print(arrSets);
-                  //               if (_formKey.currentState.validate()) {
-                  //                 print(arrSets);
-                  //                 print(arrWeights);
-                  //                 await targetRef.update(
-                  //                     {'reps': arrSets, 'weight': arrWeights});
-                  //                 //Navigator.pop(context);
-                  //               } else {
-                  //                 print("Couldn't post");
-                  //               }
-                  //             },
-                  //           ),
-                  //         ),
-                  //       )
-                  //     : Container(
-                  //         height: 10,
-                  //         width: 20,
-                  //         child: Divider(),
-                  //       ),
                 ],
               );
             }),

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:grouped_list/grouped_list.dart';
 import 'package:pump_tracker/screens/add_form.dart';
-import 'package:pump_tracker/screens/calendar_screen.dart';
+import 'package:pump_tracker/screens/preset_screen.dart';
 import 'package:pump_tracker/screens/chart_screen.dart';
 import 'package:pump_tracker/screens/edit_form.dart';
 
@@ -20,17 +20,20 @@ class _MainScreenState extends State<MainScreen> {
   String date = '';
 
   int _selectedIndex = 0;
+  bool deletePressed = false;
+
+  int reps, weight;
 
   static List<Widget> _widgetOptions = <Widget>[
     null,
-    CalendarScreen(),
+    PresetScreen(),
     ChartScreen(),
     null
   ];
 
   static List<Text> _textOptions = <Text>[
     null,
-    Text("Calendar"),
+    Text("Preset Workouts"),
     Text("Chart"),
     null
   ];
@@ -53,8 +56,8 @@ class _MainScreenState extends State<MainScreen> {
       final DateTime picked = await showDatePicker(
           context: context,
           initialDate: selectedDate,
-          firstDate: DateTime(2018),
-          lastDate: DateTime(2030),
+          firstDate: DateTime(2019),
+          lastDate: DateTime(2021),
           builder: (context, child) {
             return Theme(
               data: ThemeData.dark().copyWith(
@@ -86,13 +89,18 @@ class _MainScreenState extends State<MainScreen> {
           });
     }
 
-    void _showEditPanel(String date, String id, var doc) {
+    void _showEditPanel(String date, String id, var doc, var ref) {
       showModalBottomSheet(
           context: context,
           builder: (context) {
             return Container(
               padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 60.0),
-              child: EditForm(date: date, id: docID, doc: doc),
+              child: EditForm(
+                date: date,
+                id: docID,
+                doc: doc,
+                targetRef: ref,
+              ),
             );
           });
     }
@@ -107,7 +115,6 @@ class _MainScreenState extends State<MainScreen> {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: arrSets.length,
               itemBuilder: (context, index) {
-                // print(arrSets);
                 return Column(
                   children: [
                     Row(
@@ -123,7 +130,8 @@ class _MainScreenState extends State<MainScreen> {
                                       " x " +
                                       arrWeights[index].toString() +
                                       " lbs",
-                                  style: TextStyle(fontSize: 14),
+                                  style:
+                                      TextStyle(fontSize: 14, wordSpacing: 10),
                                 ),
                               ),
                             ),
@@ -182,7 +190,6 @@ class _MainScreenState extends State<MainScreen> {
       });
       if (_selectedIndex == 3) {
         showConfirmation();
-        //await _auth.signOut();
       }
     }
 
@@ -241,8 +248,8 @@ class _MainScreenState extends State<MainScreen> {
                             item1['name'].compareTo(item2['name']),
                         order: GroupedListOrder.DESC,
                         useStickyGroupSeparators: false,
-                        groupSeparatorBuilder: (String value) => Card(
-                          elevation: 10.0,
+                        groupSeparatorBuilder: (String value) => Container(
+                          // elevation: 10.0,
                           // margin: new EdgeInsets.symmetric(horizontal: 50.0),
                           color: Theme.of(context).accentColor,
                           child: Text(
@@ -259,6 +266,21 @@ class _MainScreenState extends State<MainScreen> {
                             child: Column(
                               children: [
                                 Dismissible(
+                                  background: Container(
+                                    alignment: Alignment.centerRight,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10),
+                                      child: Text(
+                                        "Delete",
+                                        textAlign: TextAlign.end,
+                                        style: TextStyle(
+                                            fontSize: 20,
+                                            color:
+                                                Theme.of(context).primaryColor),
+                                      ),
+                                    ),
+                                  ),
                                   key: Key(element.documentID),
                                   onDismissed: (direction) async {
                                     print(direction.index);
@@ -284,8 +306,8 @@ class _MainScreenState extends State<MainScreen> {
                                             setState(() {
                                               docID = element.documentID;
                                             });
-                                            _showEditPanel(
-                                                date, docID, element);
+                                            _showEditPanel(date, docID, element,
+                                                targetRef);
                                           },
                                         ),
                                       ),
@@ -321,8 +343,7 @@ class _MainScreenState extends State<MainScreen> {
         unselectedItemColor: Colors.white,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today), label: 'Calendar'),
+          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Presets'),
           BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart), label: 'Progress'),
           BottomNavigationBarItem(
