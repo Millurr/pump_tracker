@@ -10,8 +10,10 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  String _email, _password;
+  String _email, _password, _confirm_password;
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _pass = TextEditingController();
+  final TextEditingController _confirmPass = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -40,51 +42,92 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ],
       ),
       body: Container(
-        child: Center(
-            child: Container(
-          width: 300,
-          height: 200,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              TextField(
-                decoration: InputDecoration.collapsed(
-                    hintText: "Email", border: UnderlineInputBorder()),
-                onChanged: (value) {
-                  this.setState(() {
-                    _email = value;
-                  });
-                },
-              ),
-              TextField(
-                decoration: InputDecoration.collapsed(
-                    hintText: "Password", border: UnderlineInputBorder()),
-                obscureText: true,
-                onChanged: (value) {
-                  this.setState(() {
-                    _password = value;
-                  });
-                },
-              ),
-              RaisedButton(
-                color: Colors.grey[900],
-                child: Text(
-                  "Sign Up",
-                  style: TextStyle(color: Colors.white),
+        child: Form(
+          key: _formKey,
+          child: Center(
+              child: Container(
+            width: 300,
+            height: 300,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                TextFormField(
+                  decoration: InputDecoration(
+                      hintText: "Email",
+                      border: UnderlineInputBorder(),
+                      errorStyle:
+                          TextStyle(color: Theme.of(context).primaryColor)),
+                  onChanged: (value) {
+                    this.setState(() {
+                      _email = value;
+                    });
+                  },
+                  validator: (input) =>
+                      input.isEmpty ? 'Please enter an email.' : null,
                 ),
-                onPressed: () {
-                  FirebaseAuth.instance
-                      .createUserWithEmailAndPassword(
-                          email: _email, password: _password)
-                      .then((onValue) {})
-                      .catchError((error) {
-                    print(error.toString());
-                  });
-                },
-              )
-            ],
-          ),
-        )),
+                TextFormField(
+                    controller: _pass,
+                    decoration: InputDecoration(
+                        hintText: "Password",
+                        border: UnderlineInputBorder(),
+                        errorStyle:
+                            TextStyle(color: Theme.of(context).primaryColor)),
+                    obscureText: true,
+                    onChanged: (value) {
+                      this.setState(() {
+                        _password = value;
+                      });
+                    },
+                    validator: (input) {
+                      if (input.isEmpty) {
+                        return 'Enter a password';
+                      }
+                      return null;
+                    }),
+                TextFormField(
+                    controller: _confirmPass,
+                    decoration: InputDecoration(
+                        hintText: "Confirm Password",
+                        border: UnderlineInputBorder(),
+                        errorStyle:
+                            TextStyle(color: Theme.of(context).primaryColor)),
+                    obscureText: true,
+                    onChanged: (value) {
+                      this.setState(() {
+                        _confirm_password = value;
+                      });
+                    },
+                    validator: (input) {
+                      if (input.isEmpty) {
+                        return 'Enter a confirm password';
+                      }
+                      if (input != _pass.text) {
+                        return 'Passwords do not match';
+                      }
+                      return null;
+                    }),
+                RaisedButton(
+                  color: Colors.grey[900],
+                  child: Text(
+                    "Sign Up",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onPressed: () {
+                    if (_formKey.currentState.validate()) {
+                      FirebaseAuth.instance
+                          .createUserWithEmailAndPassword(
+                              email: _email, password: _password)
+                          .then((onValue) {})
+                          .catchError((error) {
+                        print(error.toString());
+                      });
+                    }
+                  },
+                )
+              ],
+            ),
+          )),
+        ),
       ),
     );
   }
