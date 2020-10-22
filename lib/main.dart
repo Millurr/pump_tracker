@@ -15,6 +15,7 @@ void main() async {
           accentColorBrightness: Brightness.dark,
           primaryColor: Colors.grey[900],
           accentColor: Colors.red[400],
+          textSelectionHandleColor: Colors.grey[900],
           textTheme: TextTheme(
               headline1: TextStyle(color: Colors.white, fontSize: 20),
               headline2: TextStyle(color: Colors.red[400], fontSize: 28),

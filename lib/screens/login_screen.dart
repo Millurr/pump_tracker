@@ -40,51 +40,73 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
       body: Container(
-        child: Center(
+        child: Form(
+          key: _formKey,
+            child: Center(
             child: Container(
-          width: 300,
-          height: 200,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              TextField(
-                decoration: InputDecoration.collapsed(
-                    hintText: "Email", border: UnderlineInputBorder()),
-                onChanged: (value) {
-                  this.setState(() {
-                    _email = value;
-                  });
-                },
-              ),
-              TextField(
-                decoration: InputDecoration.collapsed(
-                    hintText: "Password", border: UnderlineInputBorder()),
-                obscureText: true,
-                onChanged: (value) {
-                  this.setState(() {
-                    _password = value;
-                  });
-                },
-              ),
-              RaisedButton(
-                color: Colors.grey[900],
-                child: Text(
-                  "Sign In",
-                  style: TextStyle(color: Colors.white),
+            width: 300,
+            height: 200,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                TextFormField(
+                  cursorColor: Theme.of(context).primaryColor,
+                  decoration: InputDecoration(
+                      hintText: "Email", border: UnderlineInputBorder(),
+                      errorStyle:
+                          TextStyle(color: Theme.of(context).primaryColor)),
+                  onChanged: (value) {
+                    this.setState(() {
+                      _email = value;
+                    });
+                  },
+                  validator: (input) {
+                      if (input.isEmpty) {
+                        return 'Enter an email.';
+                      }
+                      return null;
+                    }
                 ),
-                onPressed: () {
-                  FirebaseAuth.instance
-                      .signInWithEmailAndPassword(
-                          email: _email, password: _password)
-                      .then((onValue) {})
-                      .catchError((error) {
-                    print(error.toString());
-                  });
-                },
-              )
-            ],
-          ),
-        )),
+                TextFormField(
+                  cursorColor: Theme.of(context).primaryColor,
+                  decoration: InputDecoration(
+                      hintText: "Password", border: UnderlineInputBorder(),
+                      errorStyle:
+                          TextStyle(color: Theme.of(context).primaryColor)),
+                  obscureText: true,
+                  onChanged: (value) {
+                    this.setState(() {
+                      _password = value;
+                    });
+                  },
+                  validator: (input) {
+                      if (input.isEmpty) {
+                        return 'Enter a password';
+                      }
+                      return null;
+                    }
+                ),
+                RaisedButton(
+                  color: Colors.grey[900],
+                  child: Text(
+                    "Sign In",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onPressed: () {
+                    if (_formKey.currentState.validate()) {
+                      FirebaseAuth.instance
+                        .signInWithEmailAndPassword(
+                            email: _email, password: _password)
+                        .catchError((onError) {
+                          print(onError.toString());
+                    });
+                    }
+                  },
+                )
+              ],
+            ),
+          )),
+        ),
       ),
     );
   }

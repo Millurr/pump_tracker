@@ -197,12 +197,12 @@ class _MainScreenState extends State<MainScreen> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).primaryColor,
         leading: _selectedIndex == 0
-            ? RaisedButton(
+            ? IconButton(
                 onPressed: () {
                   _selectedDate(context);
                 },
-                child: Icon(Icons.calendar_today_outlined),
-                color: Theme.of(context).primaryColor,
+                icon: Icon(Icons.calendar_today, color: Colors.white,),
+                // color: Theme.of(context).primaryColor,
               )
             : null,
         title: _selectedIndex == 0
