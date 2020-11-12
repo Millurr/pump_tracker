@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -17,6 +18,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    // push defaults to user account
+    void getDefaults(String userID) async {
+      FirebaseFirestore.instance.collection('defaluts')
+      .get()
+      .then((QuerySnapshot querySnapshot) => {
+        querySnapshot.docs.forEach((doc) {
+          FirebaseFirestore.instance.collection('users')
+          .doc(userID)
+          .collection('presets')
+          .add({
+            'name': doc['name'],
+            'target': doc['target']
+          });
+         })
+      });
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).accentColor,
       appBar: AppBar(
@@ -112,12 +131,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     "Sign Up",
                     style: TextStyle(color: Colors.white),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState.validate()) {
-                      FirebaseAuth.instance
+                      await FirebaseAuth.instance
                           .createUserWithEmailAndPassword(
                               email: _email, password: _password)
-                          .then((onValue) {})
+                          .then((onValue) {
+                            getDefaults(onValue.user.uid.toString());
+                          })
                           .catchError((error) {
                         print(error.toString());
                       });
