@@ -201,8 +201,10 @@ class _MainScreenState extends State<MainScreen> {
                 onPressed: () {
                   _selectedDate(context);
                 },
-                icon: Icon(Icons.calendar_today, color: Colors.white,),
-                // color: Theme.of(context).primaryColor,
+                icon: Icon(
+                  Icons.calendar_today,
+                  color: Colors.white,
+                ),
               )
             : null,
         title: _selectedIndex == 0
@@ -249,8 +251,6 @@ class _MainScreenState extends State<MainScreen> {
                         order: GroupedListOrder.DESC,
                         useStickyGroupSeparators: false,
                         groupSeparatorBuilder: (String value) => Container(
-                          // elevation: 10.0,
-                          // margin: new EdgeInsets.symmetric(horizontal: 50.0),
                           color: Theme.of(context).accentColor,
                           child: Text(
                             value,

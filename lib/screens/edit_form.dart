@@ -75,7 +75,6 @@ class _EditFormState extends State<EditForm> {
                               });
                               arrSets[index] = int.parse(input);
                               await targetRef.update({'reps': arrSets});
-                              // print(arrSets[index]);
                             },
                           ),
                         ),
@@ -97,11 +96,8 @@ class _EditFormState extends State<EditForm> {
                             onChanged: (input) async {
                               setState(() {
                                 weight = int.parse(input);
-                                // submitWeightsArr[index] = int.parse(input);
                               });
-                              // print(arrWeights);
                               arrWeights[index] = int.parse(input);
-                              //print(arrWeights[index]);
                               await targetRef.update({'weight': arrWeights});
                             },
                           ),
@@ -167,24 +163,6 @@ class _EditFormState extends State<EditForm> {
                     ),
                   ),
                   _makeFormWidget(data['reps'], data['weight']),
-                  // Row(
-                  //   children: [
-                  //     Expanded(
-                  //       child: Padding(
-                  //         padding: EdgeInsets.all(8.0),
-                  //         child: RaisedButton(
-                  //           color: Theme.of(context).accentColor,
-                  //           child: Text('Update'),
-                  //           onPressed: () async {
-                  //             await targetRef
-                  //                 .update({'sets': sets, 'weight': weights});
-                  //             Navigator.pop(context);
-                  //           },
-                  //         ),
-                  //       ),
-                  //     )
-                  //   ],
-                  // )
                 ],
               ),
             ));
