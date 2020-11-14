@@ -86,6 +86,7 @@ class _PresetScreenState extends State<PresetScreen> {
                         key: Key(element.documentID),
                         onDismissed: (direction) async {
                           print(direction.index);
+                          await presetsRef.doc(element.documentID).delete();
                         },
                         child: Card(
                           elevation: 8.0,

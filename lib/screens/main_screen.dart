@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:grouped_list/grouped_list.dart';
 import 'package:pump_tracker/screens/add_form.dart';
+import 'package:pump_tracker/screens/add_generic.dart';
 import 'package:pump_tracker/screens/preset_screen.dart';
 import 'package:pump_tracker/screens/chart_screen.dart';
 import 'package:pump_tracker/screens/edit_form.dart';
@@ -193,6 +194,17 @@ class _MainScreenState extends State<MainScreen> {
       }
     }
 
+    void _addGeneric() {
+      showModalBottomSheet(
+          context: context,
+          builder: (context) {
+            return Container(
+              padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 60.0),
+              child: AddGeneric(),
+            );
+          });
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).primaryColor,
@@ -218,10 +230,12 @@ class _MainScreenState extends State<MainScreen> {
               )
             : _textOptions.elementAt(_selectedIndex),
         actions: [
-          _selectedIndex == 0
+          (_selectedIndex == 0) || (_selectedIndex == 1)
               ? IconButton(
                   icon: Icon(Icons.add),
-                  onPressed: () => _showAddPanel(date),
+                  onPressed: _selectedIndex == 0
+                      ? () => _showAddPanel(date)
+                      : () => _addGeneric(),
                 )
               : Text('')
         ],

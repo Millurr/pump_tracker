@@ -18,14 +18,14 @@ class _AddFormState extends State<AddForm> {
   final _formKey = GlobalKey<FormState>();
 
   final List<String> categories = [
-    "Chest",
-    "Triceps",
+    "Abs",
     "Back",
-    "Traps",
-    "Legs",
     "Biceps",
+    "Chest",
     "Forearms",
-    "Abs"
+    "Legs",
+    "Traps",
+    "Triceps",
   ];
   final List<int> setSets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -46,8 +46,6 @@ class _AddFormState extends State<AddForm> {
     var userRef = FirebaseFirestore.instance.collection('users').doc(uid);
     var dateRef = userRef.collection('date');
     var targetRef = dateRef.doc(widget.date).collection('target');
-
-    print(uid);
 
     _setSetsList(int i) {
       setState(() {
@@ -141,7 +139,7 @@ class _AddFormState extends State<AddForm> {
           DropdownButtonFormField(
             validator: (val) =>
                 val == null ? 'Please select number of sets' : null,
-            hint: Text("Select number # of sets"),
+            hint: Text("Select # of sets"),
             //value: _setValue,
             items: setSets.map((sets) {
               return DropdownMenuItem(

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AddToForm extends StatefulWidget {
   final String name, target;
@@ -19,10 +20,13 @@ class _AddToFormState extends State<AddToForm> {
   DateTime selectedDate = DateTime.now();
   String date = '';
 
-  var weights = new List<dynamic>();
-  var sets = new List<dynamic>();
+  final List<int> setSets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-  int reps, weight;
+  List<int> sets, weight;
+
+  List<TextFormField> reps = new List<TextFormField>(0);
+  List<TextFormField> weights = new List<TextFormField>(0);
+
   int i = 0;
 
   var arrSets = [0];
@@ -65,11 +69,68 @@ class _AddToFormState extends State<AddToForm> {
         });
     }
 
-    return Container(
-      height: 300,
-      child: Center(
-        child: Column(
+    _setSetsList(int i) {
+      setState(() {
+        reps = new List<TextFormField>(i);
+        weights = new List<TextFormField>(i);
+        sets = new List<int>(i);
+        weight = new List<int>(i);
+      });
+    }
+
+    List<Widget> makeListWidget() {
+      return reps.asMap().entries.map<Widget>((document) {
+        int i = document.key;
+        int displayIndex = i + 1;
+        return Row(
           children: [
+            Expanded(
+              child: Text(displayIndex.toString()),
+            ),
+            Expanded(
+                child: SizedBox(
+                    width: 20,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextFormField(
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(hintText: "Reps"),
+                        onChanged: (val) =>
+                            setState(() => sets[i] = int.parse(val)),
+                        validator: (value) =>
+                            value == null ? 'Missing Entry' : null,
+                      ),
+                    ))),
+            Expanded(
+                child: SizedBox(
+                    width: 20,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextFormField(
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(hintText: "Weight"),
+                        onChanged: (val) =>
+                            setState(() => weight[i] = int.parse(val)),
+                        validator: (value) =>
+                            value == null ? 'Missing Entry' : null,
+                      ),
+                    ))),
+          ],
+        );
+      }).toList();
+    }
+
+    return Form(
+      key: _formKey,
+      child: Container(
+        child: ListView(
+          children: <Widget>[
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
@@ -84,33 +145,60 @@ class _AddToFormState extends State<AddToForm> {
                 style: TextStyle(fontSize: 18),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    selectedDate.month.toString() +
-                        '-' +
-                        selectedDate.day.toString() +
-                        '-' +
-                        selectedDate.year.toString(),
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.calendar_today, color: Colors.white),
-                    onPressed: () {
-                      _selectedDate(context);
-                    },
-                  )
-                ],
-              ),
+            Row(
+              // mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.calendar_today, color: Colors.white),
+                  onPressed: () {
+                    _selectedDate(context);
+                  },
+                ),
+                Text(
+                  selectedDate.month.toString() +
+                      '-' +
+                      selectedDate.day.toString() +
+                      '-' +
+                      selectedDate.year.toString(),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      decoration: TextDecoration.underline),
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: IconButton(
-                icon: Icon(Icons.add, color: Colors.white),
-                onPressed: () async {
+            // Drop down menu for the number of sets
+            DropdownButtonFormField(
+              validator: (val) =>
+                  val == null ? 'Please select a number of sets' : null,
+              hint: Text("Select # of sets"),
+              items: setSets.map((sets) {
+                return DropdownMenuItem(
+                  value: sets,
+                  child: Text(sets == 1 ? '$sets set' : '$sets sets'),
+                );
+              }).toList(),
+              onChanged: (val) {
+                _setSetsList(val);
+              },
+            ),
+            Column(
+              children: makeListWidget(),
+            ),
+            RaisedButton(
+              color: Theme.of(context).accentColor,
+              child: Text(
+                'Add',
+                style: TextStyle(color: Colors.white),
+              ),
+              onPressed: () async {
+                if (_formKey.currentState.validate()) {
+                  // Checks if there's any null values in the arrays
+                  // If so, sets it equal to 1
+                  for (int k = 0; k < sets.length; k++) {
+                    if (sets[k] == null) sets[k] = 1;
+                    if (weight[k] == null) weight[k] = 1;
+                  }
                   await FirebaseFirestore.instance
                       .collection('users')
                       .doc(uid)
@@ -120,118 +208,16 @@ class _AddToFormState extends State<AddToForm> {
                       .add({
                     'name': widget.name,
                     'target': widget.target,
-                    'reps': arrSets,
-                    'weight': arrWeights
+                    'reps': sets,
+                    'weight': weight,
                   }).then((i) {
                     Navigator.pop(context);
                   });
-                },
-              ),
+                } else {
+                  print("Validation failed.");
+                }
+              },
             )
-            // Expanded(
-            //   child: Container(
-            //     height: 300,
-            //     child: ListView.builder(
-            //       itemCount: sets.length == 0 ? 1 : sets.length,
-            //       itemBuilder: (context, index) {
-            //         sets.length == 0 ? sets.add(0) : null;
-            //         weights.length == 0 ? weights.add(0) : null;
-            //         int displayIndex = index + 1;
-            //         return Column(
-            //           children: [
-            //             Row(
-            //               children: [
-            //                 Expanded(
-            //                   child: Padding(
-            //                     padding: const EdgeInsets.only(left: 8.0),
-            //                     child: Text("Set " + (displayIndex).toString()),
-            //                   ),
-            //                 ),
-            //                 Expanded(
-            //                   child: Padding(
-            //                     padding: const EdgeInsets.only(left: 8.0),
-            //                     child: TextFormField(
-            //                       inputFormatters: [
-            //                         FilteringTextInputFormatter.digitsOnly
-            //                       ],
-            //                       keyboardType: TextInputType.number,
-            //                       key: deletePressed
-            //                           ? Key(sets[index].toString())
-            //                           : null,
-            //                       initialValue: sets[index].toString(),
-            //                       validator: (value) =>
-            //                           value == null ? 'Missing Entry' : null,
-            //                       onChanged: (input) {
-            //                         setState(() {
-            //                           sets[index] = int.parse(input);
-            //                         });
-            //                         sets[index] = int.parse(input);
-            //                       },
-            //                     ),
-            //                   ),
-            //                 ),
-            //                 Expanded(
-            //                   child: Padding(
-            //                     padding: const EdgeInsets.only(left: 8.0),
-            //                     child: TextFormField(
-            //                       inputFormatters: [
-            //                         FilteringTextInputFormatter.digitsOnly
-            //                       ],
-            //                       keyboardType: TextInputType.number,
-            //                       key: deletePressed
-            //                           ? Key(weights[index].toString())
-            //                           : null,
-            //                       initialValue: weights[index].toString(),
-            //                       validator: (value) =>
-            //                           value == null ? 'Missing Entry' : null,
-            //                       onChanged: (input) {
-            //                         setState(() {
-            //                           weights[index] = int.parse(input);
-            //                         });
-            //                         weights[index] = int.parse(input);
-            //                       },
-            //                     ),
-            //                   ),
-            //                 ),
-            //                 Expanded(
-            //                   child: FlatButton(
-            //                     child: Icon(Icons.delete),
-            //                     onPressed: () async {
-            //                       setState(() {
-            //                         deletePressed = true;
-            //                       });
-
-            //                       sets.removeAt(index);
-            //                       weights.removeAt(index);
-            //                     },
-            //                   ),
-            //                 ),
-            //               ],
-            //             ),
-            //             index == sets.length - 1
-            //                 ? Container(
-            //                     child: RaisedButton(
-            //                       color: Theme.of(context).accentColor,
-            //                       child: Icon(Icons.add),
-            //                       onPressed: () async {
-            //                         setState(() {
-            //                           sets.add(0);
-            //                           weights.add(0);
-            //                         });
-            //                       },
-            //                     ),
-            //                   )
-            //                 : Container(
-            //                     height: 10,
-            //                     width: 20,
-            //                     child: Divider(),
-            //                   ),
-            //           ],
-            //         );
-            //       },
-            //     ),
-            //   ),
-            // )
           ],
         ),
       ),
