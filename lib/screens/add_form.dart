@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -22,12 +24,13 @@ class _AddFormState extends State<AddForm> {
     "Back",
     "Biceps",
     "Chest",
-    "Forearms",
     "Legs",
     "Traps",
     "Triceps",
   ];
   final List<int> setSets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+  List<dynamic> names = new List<dynamic>();
 
   List<TextFormField> reps = new List<TextFormField>(0);
   List<TextFormField> weights = new List<TextFormField>(0);
@@ -46,6 +49,26 @@ class _AddFormState extends State<AddForm> {
     var userRef = FirebaseFirestore.instance.collection('users').doc(uid);
     var dateRef = userRef.collection('date');
     var targetRef = dateRef.doc(widget.date).collection('target');
+
+    void _getWorkouts() async {
+      int j = 0;
+      await userRef
+          .collection('presets')
+          .where('target', isEqualTo: _currentCategory)
+          .get()
+          .then((QuerySnapshot querySnapshot) => {
+                names = new List(querySnapshot.docs.length),
+                querySnapshot.docs.forEach((doc) {
+                  // print(doc["name"]);
+                  setState(() {
+                    names[j] = doc["name"];
+                  });
+                  j++;
+                })
+              });
+      print(names);
+      j = 0;
+    }
 
     _setSetsList(int i) {
       setState(() {
@@ -127,23 +150,36 @@ class _AddFormState extends State<AddForm> {
                   child: Text('$category'),
                 );
               }).toList(),
-              onChanged: (val) => setState(() => _currentCategory = val)),
-          DropdownButtonFormField(
-              validator: (value) =>
-                  value == null ? 'Please select a category' : null,
-              hint: Text("Select a category"),
-              items: categories.map((category) {
-                return DropdownMenuItem(
-                  value: category,
-                  child: Text('$category'),
-                );
-              }).toList(),
-              onChanged: (val) => setState(() => _currentCategory = val)),
-          TextFormField(
-            decoration: const InputDecoration(hintText: "Workout Name"),
-            validator: (val) => val.isEmpty ? 'Please enter a name' : null,
-            onChanged: (val) => setState(() => _currentName = val),
+              onChanged: (val) async {
+                setState(() {
+                  _currentCategory = val;
+                  names = [];
+                  _currentName = null;
+                });
+                _getWorkouts();
+              }),
+          IgnorePointer(
+            ignoring: _currentCategory == null ? true : false,
+            child: DropdownButtonFormField(
+                value: _currentName,
+                validator: (value) =>
+                    value == null ? 'Please select workout' : null,
+                hint: _currentCategory == null
+                    ? Text("Select a category first")
+                    : Text("Select a workout"),
+                items: names.map((name) {
+                  return DropdownMenuItem(
+                    value: name,
+                    child: Text(name),
+                  );
+                }).toList(),
+                onChanged: (val) => setState(() => _currentName = val)),
           ),
+          // TextFormField(
+          //   decoration: const InputDecoration(hintText: "Workout Name"),
+          //   validator: (val) => val.isEmpty ? 'Please enter a name' : null,
+          //   onChanged: (val) => setState(() => _currentName = val),
+          // ),
           SizedBox(
             height: 20.0,
           ),

@@ -16,7 +16,6 @@ class _AddGenericState extends State<AddGeneric> {
     "Back",
     "Biceps",
     "Chest",
-    "Forearms",
     "Legs",
     "Traps",
     "Triceps",
