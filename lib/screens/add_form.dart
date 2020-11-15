@@ -128,6 +128,17 @@ class _AddFormState extends State<AddForm> {
                 );
               }).toList(),
               onChanged: (val) => setState(() => _currentCategory = val)),
+          DropdownButtonFormField(
+              validator: (value) =>
+                  value == null ? 'Please select a category' : null,
+              hint: Text("Select a category"),
+              items: categories.map((category) {
+                return DropdownMenuItem(
+                  value: category,
+                  child: Text('$category'),
+                );
+              }).toList(),
+              onChanged: (val) => setState(() => _currentCategory = val)),
           TextFormField(
             decoration: const InputDecoration(hintText: "Workout Name"),
             validator: (val) => val.isEmpty ? 'Please enter a name' : null,

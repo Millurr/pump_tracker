@@ -18,22 +18,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     // push defaults to user account
     void getDefaults(String userID) async {
-      FirebaseFirestore.instance.collection('defaluts')
-      .get()
-      .then((QuerySnapshot querySnapshot) => {
-        querySnapshot.docs.forEach((doc) {
-          FirebaseFirestore.instance.collection('users')
-          .doc(userID)
-          .collection('presets')
-          .add({
-            'name': doc['name'],
-            'target': doc['target']
-          });
-         })
-      });
+      FirebaseFirestore.instance
+          .collection('defaults')
+          .get()
+          .then((QuerySnapshot querySnapshot) => {
+                querySnapshot.docs.forEach((doc) {
+                  FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(userID)
+                      .collection('presets')
+                      .add({'name': doc['name'], 'target': doc['target']});
+                })
+              });
     }
 
     return Scaffold(
@@ -137,9 +135,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           .createUserWithEmailAndPassword(
                               email: _email, password: _password)
                           .then((onValue) {
-                            getDefaults(onValue.user.uid.toString());
-                          })
-                          .catchError((error) {
+                        getDefaults(onValue.user.uid.toString());
+                      }).catchError((error) {
                         print(error.toString());
                       });
                     }
