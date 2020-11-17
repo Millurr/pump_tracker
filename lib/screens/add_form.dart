@@ -211,6 +211,8 @@ class _AddFormState extends State<AddForm> {
             ),
             onPressed: () async {
               if (_formKey.currentState.validate()) {
+                await dateRef.doc(widget.date).set({'date': widget.date});
+
                 await targetRef.add({
                   'name': _currentName,
                   'reps': sets,
