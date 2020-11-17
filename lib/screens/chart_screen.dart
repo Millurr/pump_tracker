@@ -45,7 +45,7 @@ class _ChartScreenState extends State<ChartScreen> {
     // TODO: implement initState
     super.initState();
     _seriesLineData = List<charts.Series<Sales, int>>();
-    _generateData();
+    // _generateData();
   }
 
   @override
@@ -61,22 +61,18 @@ class _ChartScreenState extends State<ChartScreen> {
         .doc(uid)
         .collection('presets');
 
-    // _getPresets() async {
-    //   if (dropwDownList.length == 0) {
-    //     await presetsRef.get().then((snap) {
-    //       snap.docs.forEach((doc) {
-    //         dropwDownList.add(doc['name']);
-    //         print(doc['name']);
-    //       });
-    //     });
-    //   }
-    // }
+    _getMax(List arr) {
+      var compare = 0;
 
-    // _getPresets();
+      for (var val in arr) {
+        if (val > compare) compare = val;
+      }
+
+      return compare;
+    }
 
     _generateMaxWeight(String workout) async {
       var dates = [];
-      var maxWeights = [];
 
       await dateRef.get().then((QuerySnapshot querySnapshot) {
         querySnapshot.docs.forEach((doc) {
@@ -84,54 +80,34 @@ class _ChartScreenState extends State<ChartScreen> {
         });
       });
 
-      var lineMaxWeightData = [
-        new Sales(0, 45),
-        new Sales(1, 56),
-        new Sales(2, 55),
-        new Sales(3, 60),
-        new Sales(4, 61),
-        new Sales(5, 70),
-      ];
+      List<Sales> lineMaxWeightData = [];
 
+      int i = 0;
       dates.forEach((date) async {
         await dateRef
             .doc(date)
             .collection('target')
             .get()
             .then((querySnapshot) {
-          querySnapshot.docs.forEach((doc) {
-            // print(doc['name']);
+          querySnapshot.docs.forEach((doc) async {
             if (doc['name'] == workout) {
-              print(doc['name'] + ' ' + date);
-              print(doc['weight'][0].runtimeType);
-              // print(m);
-              // maxWeights.add(doc['weight'].reduce(max));
+              if (doc['weight'].length > 1) {
+                var max = _getMax(doc['weight']);
+                lineMaxWeightData.add(new Sales(i, max));
+              } else {
+                lineMaxWeightData.add(new Sales(i, doc['weight'][0]));
+              }
+              i++;
             }
           });
         });
       });
-
-      print(maxWeights);
-
-      // for (int i = 0; i < dates.length; i++) {
-      //   // lineMaxWeightData.add(new Sales(i, 3));
-      //   await dateRef
-      //       .doc(dates[i])
-      //       .collection('target')
-      //       .get()
-      //       .then((querySnapshot) {
-      //     querySnapshot.docs.forEach((doc) {
-      //       if (doc['name'] == workout) {
-      //         maxWeights[i] = doc['weight'].reduce(max);
-      //       }
-      //     });
-      //   });
-      // }
+      i = 0;
 
       _seriesLineData.add(
         charts.Series(
           colorFn: (__, _) => charts.ColorUtil.fromDartColor(Color(0xff990099)),
-          id: 'Air Pollution',
+          id: 'Max Weight',
           data: lineMaxWeightData,
           domainFn: (Sales sales, _) => sales.yearval,
           measureFn: (Sales sales, _) => sales.salesval,
@@ -167,11 +143,11 @@ class _ChartScreenState extends State<ChartScreen> {
                     }
                     return DropdownButton(
                       items: workouts,
-                      onChanged: (val) {
+                      onChanged: (val) async {
                         setState(() {
                           _currentName = val;
                         });
-                        _generateMaxWeight(val);
+                        await _generateMaxWeight(val);
                       },
                       value: _currentName,
                       isExpanded: false,
@@ -183,49 +159,46 @@ class _ChartScreenState extends State<ChartScreen> {
                 }),
             Container(
               height: 300,
-              child: Column(
-                children: [
-                  Text(
-                    'Max Weight',
-                    style:
-                        TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
-                  ),
-                  Expanded(
-                    child: charts.LineChart(_seriesLineData,
-                        defaultRenderer:
-                            new charts.LineRendererConfig(includePoints: true),
-                        animate: false,
-                        behaviors: [
-                          new charts.ChartTitle('Dates',
-                              behaviorPosition: charts.BehaviorPosition.bottom,
-                              titleOutsideJustification:
-                                  charts.OutsideJustification.middleDrawArea),
-                          new charts.ChartTitle('Max Weight',
-                              behaviorPosition: charts.BehaviorPosition.start,
-                              titleOutsideJustification:
-                                  charts.OutsideJustification.middleDrawArea),
-                          new charts.ChartTitle(
-                            '',
-                            behaviorPosition: charts.BehaviorPosition.end,
-                            titleOutsideJustification:
-                                charts.OutsideJustification.middleDrawArea,
-                          )
-                        ]),
-                  ),
-                ],
-              ),
+              child: _seriesLineData.isNotEmpty
+                  ? Column(
+                      children: [
+                        Text(
+                          'Max Weight',
+                          style: TextStyle(
+                              fontSize: 24.0, fontWeight: FontWeight.bold),
+                        ),
+                        Expanded(
+                          child: charts.LineChart(_seriesLineData,
+                              defaultRenderer: new charts.LineRendererConfig(
+                                  includePoints: true),
+                              animate: false,
+                              behaviors: [
+                                new charts.ChartTitle('Dates',
+                                    behaviorPosition:
+                                        charts.BehaviorPosition.bottom,
+                                    titleOutsideJustification: charts
+                                        .OutsideJustification.middleDrawArea),
+                                new charts.ChartTitle('Max Weight',
+                                    behaviorPosition:
+                                        charts.BehaviorPosition.start,
+                                    titleOutsideJustification: charts
+                                        .OutsideJustification.middleDrawArea),
+                                new charts.ChartTitle(
+                                  '',
+                                  behaviorPosition: charts.BehaviorPosition.end,
+                                  titleOutsideJustification: charts
+                                      .OutsideJustification.middleDrawArea,
+                                )
+                              ]),
+                        ),
+                      ],
+                    )
+                  : Divider(),
             )
           ],
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    dropwDownList = new List<String>();
-    super.dispose();
   }
 }
 
