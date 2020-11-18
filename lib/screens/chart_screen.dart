@@ -13,18 +13,12 @@ class ChartScreen extends StatefulWidget {
 
 class _ChartScreenState extends State<ChartScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  List<charts.Series<Sales, int>> _seriesLineData =
-      new List<charts.Series<Sales, int>>();
+  List<charts.Series<Workouts, DateTime>> _maxWeightLineData =
+      new List<charts.Series<Workouts, DateTime>>();
+  List<charts.Series<Workouts, DateTime>> _volumeLineData =
+      new List<charts.Series<Workouts, DateTime>>();
   List<String> dropwDownList = new List<String>();
   String _currentName;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    // _seriesLineData = List<charts.Series<Sales, int>>();
-    // _generateData();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +43,22 @@ class _ChartScreenState extends State<ChartScreen> {
       return compare;
     }
 
+    _getVol(List sets, List weights) {
+      var volume = 0;
+
+      for (int i = 0; i < sets.length; i++) {
+        volume += sets[i] * weights[i];
+      }
+
+      return volume;
+    }
+
     _generateMaxWeight(String workout) async {
+      setState(() {
+        _maxWeightLineData = new List<charts.Series<Workouts, DateTime>>();
+        _volumeLineData = new List<charts.Series<Workouts, DateTime>>();
+      });
+
       var dates = [];
 
       await dateRef.get().then((QuerySnapshot querySnapshot) {
@@ -58,47 +67,72 @@ class _ChartScreenState extends State<ChartScreen> {
         });
       });
 
-      List<Sales> lineMaxWeightData = [];
+      List<Workouts> lineMaxWeightData = [];
+      List<Workouts> lineVolumeData = [];
 
-      int i = 0;
-      dates.forEach((date) async {
-        await dateRef
-            .doc(date)
-            .collection('target')
-            .get()
-            .then((querySnapshot) {
-          querySnapshot.docs.forEach((doc) async {
+      for (int i = 0; i < dates.length; i++) {
+        await dateRef.doc(dates[i]).collection('target').get().then((snap) {
+          snap.docs.forEach((doc) async {
             if (doc['name'] == workout) {
               if (doc['weight'].length > 1) {
                 var max = _getMax(doc['weight']);
-                lineMaxWeightData.add(new Sales(i, max));
+                var volume = _getVol(doc['reps'], doc['weight']);
+                lineMaxWeightData
+                    .add(new Workouts(DateTime.parse(dates[i]), max));
+                lineVolumeData
+                    .add(new Workouts(DateTime.parse(dates[i]), volume));
               } else {
-                lineMaxWeightData.add(new Sales(i, doc['weight'][0]));
+                lineMaxWeightData.add(
+                    new Workouts(DateTime.parse(dates[i]), doc['weight'][0]));
+                lineVolumeData.add(new Workouts(DateTime.parse(dates[i]),
+                    doc['weight'][0] * doc['reps'][0]));
               }
-              i++;
             }
           });
         });
-      });
-      i = 0;
+      }
 
-      _seriesLineData.add(
-        charts.Series(
-          colorFn: (__, _) => charts.ColorUtil.fromDartColor(Color(0xff990099)),
-          id: 'Max Weight',
-          data: lineMaxWeightData,
-          domainFn: (Sales sales, _) => sales.yearval,
-          measureFn: (Sales sales, _) => sales.salesval,
-        ),
-      );
+      if (lineMaxWeightData.length > 1) {
+        setState(() {
+          _maxWeightLineData.add(
+            charts.Series<Workouts, DateTime>(
+              colorFn: (__, _) => charts.ColorUtil.fromDartColor(
+                  Theme.of(context).primaryColor),
+              id: 'Max Weight',
+              data: lineMaxWeightData,
+              domainFn: (Workouts workouts, _) => workouts.dayVal,
+              measureFn: (Workouts workouts, _) => workouts.weightVal,
+            ),
+          );
+        });
+      }
+
+      if (lineVolumeData.length > 1) {
+        setState(() {
+          _volumeLineData.add(
+            charts.Series<Workouts, DateTime>(
+              colorFn: (__, _) => charts.ColorUtil.fromDartColor(
+                  Theme.of(context).primaryColor),
+              id: 'Max Weight',
+              data: lineVolumeData,
+              domainFn: (Workouts workouts, _) => workouts.dayVal,
+              measureFn: (Workouts workouts, _) => workouts.weightVal,
+            ),
+          );
+        });
+      }
     }
 
-    return Container(
+    Future<List<charts.Series<Workouts, DateTime>>> data =
+        Future<List<charts.Series<Workouts, DateTime>>>.delayed(
+            Duration(milliseconds: 500), () => _maxWeightLineData);
+
+    return SingleChildScrollView(
       child: Center(
         child: Column(
           children: <Widget>[
             StreamBuilder<QuerySnapshot>(
-                stream: presetsRef.snapshots(),
+                stream: presetsRef.orderBy('name').snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData)
                     return Center(
@@ -136,43 +170,53 @@ class _ChartScreenState extends State<ChartScreen> {
                   }
                 }),
             Container(
-              height: 300,
-              child: _seriesLineData.isNotEmpty
-                  ? Column(
-                      children: [
-                        Text(
-                          'Max Weight',
-                          style: TextStyle(
-                              fontSize: 24.0, fontWeight: FontWeight.bold),
-                        ),
-                        Expanded(
-                          child: charts.LineChart(_seriesLineData,
-                              defaultRenderer: new charts.LineRendererConfig(
-                                  includePoints: true),
-                              animate: false,
-                              behaviors: [
-                                new charts.ChartTitle('Dates',
-                                    behaviorPosition:
-                                        charts.BehaviorPosition.bottom,
-                                    titleOutsideJustification: charts
-                                        .OutsideJustification.middleDrawArea),
-                                new charts.ChartTitle('Max Weight',
-                                    behaviorPosition:
-                                        charts.BehaviorPosition.start,
-                                    titleOutsideJustification: charts
-                                        .OutsideJustification.middleDrawArea),
-                                new charts.ChartTitle(
-                                  '',
-                                  behaviorPosition: charts.BehaviorPosition.end,
-                                  titleOutsideJustification: charts
-                                      .OutsideJustification.middleDrawArea,
-                                )
-                              ]),
-                        ),
-                      ],
-                    )
-                  : Divider(),
-            )
+                height: 300,
+                child: _maxWeightLineData.isNotEmpty
+                    ? FutureBuilder<List<charts.Series<Workouts, DateTime>>>(
+                        future: data,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData)
+                            return Chart(
+                                _maxWeightLineData, "Max Weight", "Weight");
+                          else
+                            return Container(
+                              height: 100,
+                              width: 100,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  backgroundColor:
+                                      Theme.of(context).primaryColor,
+                                ),
+                              ),
+                            );
+                        })
+                    : _currentName == null
+                        ? Divider()
+                        : Text("No data for this exercise.")),
+            Container(
+                height: 300,
+                child: _volumeLineData.isNotEmpty
+                    ? FutureBuilder<List<charts.Series<Workouts, DateTime>>>(
+                        future: data,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData)
+                            return Chart(
+                                _volumeLineData, "Volume", "Weight x Reps");
+                          else
+                            return Container(
+                              height: 100,
+                              width: 100,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  backgroundColor:
+                                      Theme.of(context).primaryColor,
+                                ),
+                              ),
+                            );
+                        })
+                    : _currentName == null
+                        ? Divider()
+                        : Text("No data for this exercise.")),
           ],
         ),
       ),
@@ -180,9 +224,42 @@ class _ChartScreenState extends State<ChartScreen> {
   }
 }
 
-class Sales {
-  int yearval;
-  int salesval;
+class Chart extends StatelessWidget {
+  final String title, sideTitle;
+  final List<charts.Series<Workouts, DateTime>> seriesLineData;
 
-  Sales(this.yearval, this.salesval);
+  Chart(this.seriesLineData, this.title, this.sideTitle);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          title,
+          style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+        ),
+        Expanded(
+          child: charts.TimeSeriesChart(seriesLineData,
+              defaultRenderer:
+                  new charts.LineRendererConfig(includePoints: true),
+              animate: false,
+              domainAxis: new charts.EndPointsTimeAxisSpec(),
+              behaviors: [
+                new charts.ChartTitle(sideTitle,
+                    behaviorPosition: charts.BehaviorPosition.start,
+                    titleOutsideJustification:
+                        charts.OutsideJustification.middleDrawArea),
+              ]),
+        ),
+        Divider(color: Theme.of(context).primaryColor, height: 20, thickness: 2)
+      ],
+    );
+  }
+}
+
+class Workouts {
+  DateTime dayVal;
+  int weightVal;
+
+  Workouts(this.dayVal, this.weightVal);
 }
