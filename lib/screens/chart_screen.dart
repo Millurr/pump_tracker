@@ -190,9 +190,7 @@ class _ChartScreenState extends State<ChartScreen> {
                               ),
                             );
                         })
-                    : _currentName == null
-                        ? Divider()
-                        : Text("No data for this exercise.")),
+                    : Divider()),
             Container(
                 height: 300,
                 child: _volumeLineData.isNotEmpty
@@ -214,9 +212,7 @@ class _ChartScreenState extends State<ChartScreen> {
                               ),
                             );
                         })
-                    : _currentName == null
-                        ? Divider()
-                        : Text("No data for this exercise.")),
+                    : Divider()),
           ],
         ),
       ),

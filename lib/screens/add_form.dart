@@ -25,6 +25,7 @@ class _AddFormState extends State<AddForm> {
     "Biceps",
     "Chest",
     "Legs",
+    "Shoulders",
     "Traps",
     "Triceps",
   ];
