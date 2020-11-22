@@ -19,6 +19,14 @@ class _ChartScreenState extends State<ChartScreen> {
       new List<charts.Series<Workouts, DateTime>>();
   List<String> dropwDownList = new List<String>();
   String _currentName;
+  bool hasData;
+
+  @override
+  void initState() {
+    hasData = false;
+
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,10 +61,11 @@ class _ChartScreenState extends State<ChartScreen> {
       return volume;
     }
 
-    _generateMaxWeight(String workout) async {
+    _generateData(String workout) async {
       setState(() {
         _maxWeightLineData = new List<charts.Series<Workouts, DateTime>>();
         _volumeLineData = new List<charts.Series<Workouts, DateTime>>();
+        hasData = false;
       });
 
       var dates = [];
@@ -104,6 +113,7 @@ class _ChartScreenState extends State<ChartScreen> {
               measureFn: (Workouts workouts, _) => workouts.weightVal,
             ),
           );
+          hasData = true;
         });
       }
 
@@ -125,7 +135,7 @@ class _ChartScreenState extends State<ChartScreen> {
 
     Future<List<charts.Series<Workouts, DateTime>>> data =
         Future<List<charts.Series<Workouts, DateTime>>>.delayed(
-            Duration(milliseconds: 500), () => _maxWeightLineData);
+            Duration(milliseconds: 200), () => _maxWeightLineData);
 
     return SingleChildScrollView(
       child: Center(
@@ -159,7 +169,7 @@ class _ChartScreenState extends State<ChartScreen> {
                         setState(() {
                           _currentName = val;
                         });
-                        await _generateMaxWeight(val);
+                        await _generateData(val);
                       },
                       value: _currentName,
                       isExpanded: false,
@@ -169,6 +179,9 @@ class _ChartScreenState extends State<ChartScreen> {
                     );
                   }
                 }),
+            ((!hasData) && (_currentName != null))
+                ? Text("Not enough data for this exercise.")
+                : Divider(),
             Container(
                 height: 300,
                 child: _maxWeightLineData.isNotEmpty
@@ -177,7 +190,7 @@ class _ChartScreenState extends State<ChartScreen> {
                         builder: (context, snapshot) {
                           if (snapshot.hasData)
                             return Chart(
-                                _maxWeightLineData, "Max Weight", "Weight");
+                                _maxWeightLineData, "One Rep Max", "Weight");
                           else
                             return Container(
                               height: 100,

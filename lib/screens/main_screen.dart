@@ -8,6 +8,7 @@ import 'package:pump_tracker/screens/add_generic.dart';
 import 'package:pump_tracker/screens/preset_screen.dart';
 import 'package:pump_tracker/screens/chart_screen.dart';
 import 'package:pump_tracker/screens/edit_form.dart';
+import 'package:pump_tracker/screens/profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -29,14 +30,14 @@ class _MainScreenState extends State<MainScreen> {
     null,
     PresetScreen(),
     ChartScreen(),
-    null
+    ProfileScreen()
   ];
 
   static List<Text> _textOptions = <Text>[
     null,
     Text("Preset Workouts"),
-    Text("Chart"),
-    null
+    Text("Progress Tracker"),
+    Text("Profile")
   ];
 
   @override
@@ -189,9 +190,9 @@ class _MainScreenState extends State<MainScreen> {
       setState(() {
         _selectedIndex = index;
       });
-      if (_selectedIndex == 3) {
-        showConfirmation();
-      }
+      // if (_selectedIndex == 3) {
+      //   showConfirmation();
+      // }
     }
 
     void _addGeneric() {
@@ -361,7 +362,7 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart), label: 'Progress'),
           BottomNavigationBarItem(
-            label: 'Sign Out',
+            label: 'Profile',
             icon: Icon(Icons.person),
           )
         ],
