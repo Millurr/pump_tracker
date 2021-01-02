@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -91,7 +93,7 @@ class _AddFormState extends State<AddForm> {
                 child: SizedBox(
                     width: 20,
                     child: Padding(
-                      padding: EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.all(8.0),
                       child: TextFormField(
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly
@@ -108,7 +110,7 @@ class _AddFormState extends State<AddForm> {
                 child: SizedBox(
                     width: 20,
                     child: Padding(
-                      padding: EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.all(8.0),
                       child: TextFormField(
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly
@@ -128,111 +130,103 @@ class _AddFormState extends State<AddForm> {
 
     return Form(
       key: _formKey,
-      child: Center(
-        child: ListView(
-          children: <Widget>[
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 30.0),
-                child: Text(
-                  'Add a Workout',
-                  style: TextStyle(fontSize: 18.0),
-                ),
-              ),
+      child: ListView(
+        children: <Widget>[
+          Center(
+            child: Text(
+              'Add a Workout',
+              style: TextStyle(fontSize: 18.0),
             ),
-            SizedBox(
-              height: 20.0,
-            ),
-            DropdownButtonFormField(
+          ),
+          SizedBox(
+            height: 20.0,
+          ),
+          DropdownButtonFormField(
+              validator: (value) =>
+                  value == null ? 'Please select a category' : null,
+              hint: Text("Select a category"),
+              items: categories.map((category) {
+                return DropdownMenuItem(
+                  value: category,
+                  child: Text('$category'),
+                );
+              }).toList(),
+              onChanged: (val) async {
+                setState(() {
+                  _currentCategory = val;
+                  names = [];
+                  _currentName = null;
+                });
+                _getWorkouts();
+              }),
+          IgnorePointer(
+            ignoring: _currentCategory == null ? true : false,
+            child: DropdownButtonFormField(
+                value: _currentName,
                 validator: (value) =>
-                    value == null ? 'Please select a category' : null,
-                hint: Text("Select a category"),
-                items: categories.map((category) {
+                    value == null ? 'Please select workout' : null,
+                hint: _currentCategory == null
+                    ? Text("Select a category first")
+                    : Text("Select a workout"),
+                items: names.map((name) {
                   return DropdownMenuItem(
-                    value: category,
-                    child: Text('$category'),
+                    value: name,
+                    child: Text(name),
                   );
                 }).toList(),
-                onChanged: (val) async {
-                  setState(() {
-                    _currentCategory = val;
-                    names = [];
-                    _currentName = null;
-                  });
-                  _getWorkouts();
-                }),
-            IgnorePointer(
-              ignoring: _currentCategory == null ? true : false,
-              child: DropdownButtonFormField(
-                  value: _currentName,
-                  validator: (value) =>
-                      value == null ? 'Please select workout' : null,
-                  hint: _currentCategory == null
-                      ? Text("Select a category first")
-                      : Text("Select a workout"),
-                  items: names.map((name) {
-                    return DropdownMenuItem(
-                      value: name,
-                      child: Text(name),
-                    );
-                  }).toList(),
-                  onChanged: (val) => setState(() => _currentName = val)),
+                onChanged: (val) => setState(() => _currentName = val)),
+          ),
+          // TextFormField(
+          //   decoration: const InputDecoration(hintText: "Workout Name"),
+          //   validator: (val) => val.isEmpty ? 'Please enter a name' : null,
+          //   onChanged: (val) => setState(() => _currentName = val),
+          // ),
+          SizedBox(
+            height: 20.0,
+          ),
+          DropdownButtonFormField(
+            validator: (val) =>
+                val == null ? 'Please select number of sets' : null,
+            hint: Text("Select # of sets"),
+            //value: _setValue,
+            items: setSets.map((sets) {
+              return DropdownMenuItem(
+                  value: sets,
+                  child: Text(sets == 1 ? '$sets set' : '$sets sets'));
+            }).toList(),
+            onChanged: (val) {
+              setState(() {
+                _setValue = val;
+              });
+              _setSetsList(val);
+            },
+          ),
+          Column(
+            children: makeListWidget(),
+          ),
+          RaisedButton(
+            color: Theme.of(context).accentColor,
+            child: Text(
+              'Add',
+              style: TextStyle(color: Colors.white),
             ),
-            SizedBox(
-              height: 20.0,
-            ),
-            DropdownButtonFormField(
-              validator: (val) =>
-                  val == null ? 'Please select number of sets' : null,
-              hint: Text("Select # of sets"),
-              //value: _setValue,
-              items: setSets.map((sets) {
-                return DropdownMenuItem(
-                    value: sets,
-                    child: Text(sets == 1 ? '$sets set' : '$sets sets'));
-              }).toList(),
-              onChanged: (val) {
-                setState(() {
-                  weight = [];
-                  sets = [];
-                  _setValue = val;
-                });
-                _setSetsList(val);
-              },
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: makeListWidget(),
-            ),
-            RaisedButton(
-              color: Theme.of(context).accentColor,
-              child: Text(
-                'Add',
-                style: TextStyle(color: Colors.white),
-              ),
-              onPressed: () async {
-                if (_formKey.currentState.validate()) {
-                  await dateRef.doc(widget.date).set({'date': widget.date});
+            onPressed: () async {
+              if (_formKey.currentState.validate()) {
+                await dateRef.doc(widget.date).set({'date': widget.date});
 
-                  await targetRef.add({
-                    'name': _currentName,
-                    'reps': sets,
-                    'target': _currentCategory,
-                    'weight': weight
-                  });
-                  Navigator.pop(context);
-                } else {
-                  print("Validation failed.");
-                }
-              },
-            ),
-            Padding(
-              padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom),
-            )
-          ],
-        ),
+                await targetRef.add({
+                  'name': _currentName,
+                  'reps': sets,
+                  'target': _currentCategory,
+                  'weight': weight
+                });
+                Navigator.pop(context);
+              } else {
+                print("Validation failed.");
+              }
+            },
+          ),
+        ],
       ),
     );
   }
