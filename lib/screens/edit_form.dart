@@ -163,6 +163,10 @@ class _EditFormState extends State<EditForm> {
                     ),
                   ),
                   _makeFormWidget(data['reps'], data['weight']),
+                  Padding(
+                    padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom),
+                  )
                 ],
               ),
             ));
