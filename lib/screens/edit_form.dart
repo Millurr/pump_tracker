@@ -40,7 +40,7 @@ class _EditFormState extends State<EditForm> {
 
     Container _makeFormWidget(var arrSets, var arrWeights) {
       return Container(
-        height: 300,
+        height: 500,
         child: ListView.builder(
             itemCount: arrSets.length,
             itemBuilder: (context, index) {
@@ -157,12 +157,26 @@ class _EditFormState extends State<EditForm> {
               child: ListView(
                 children: [
                   Center(
-                    child: Text(
-                      "Update " + data['name'],
-                      style: TextStyle(fontSize: 18.0),
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 30.0),
+                      child: Text(
+                        "Update " + data['name'],
+                        style: TextStyle(fontSize: 18.0),
+                      ),
                     ),
                   ),
                   _makeFormWidget(data['reps'], data['weight']),
+                  Container(
+                    child: RaisedButton(
+                      color: Theme.of(context).accentColor,
+                      child: Icon(Icons.check),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom),
+                  )
                 ],
               ),
             ));

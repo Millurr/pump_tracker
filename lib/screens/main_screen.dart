@@ -59,7 +59,7 @@ class _MainScreenState extends State<MainScreen> {
           context: context,
           initialDate: selectedDate,
           firstDate: DateTime(2019),
-          lastDate: DateTime(2021),
+          lastDate: DateTime(20212),
           builder: (context, child) {
             return Theme(
               data: ThemeData.dark().copyWith(
@@ -83,6 +83,7 @@ class _MainScreenState extends State<MainScreen> {
     void _showAddPanel(String date) {
       showModalBottomSheet(
           context: context,
+          isScrollControlled: true,
           builder: (context) {
             return Container(
               padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 60.0),
@@ -94,6 +95,7 @@ class _MainScreenState extends State<MainScreen> {
     void _showEditPanel(String date, String id, var doc, var ref) {
       showModalBottomSheet(
           context: context,
+          isScrollControlled: true,
           builder: (context) {
             return Container(
               padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 60.0),

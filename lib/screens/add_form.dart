@@ -133,9 +133,12 @@ class _AddFormState extends State<AddForm> {
       child: ListView(
         children: <Widget>[
           Center(
-            child: Text(
-              'Add a Workout',
-              style: TextStyle(fontSize: 18.0),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 30.0),
+              child: Text(
+                'Add a Workout',
+                style: TextStyle(fontSize: 18.0),
+              ),
             ),
           ),
           SizedBox(
@@ -226,6 +229,10 @@ class _AddFormState extends State<AddForm> {
               }
             },
           ),
+          Padding(
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom),
+          )
         ],
       ),
     );
