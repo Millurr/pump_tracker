@@ -59,7 +59,7 @@ class _MainScreenState extends State<MainScreen> {
           context: context,
           initialDate: selectedDate,
           firstDate: DateTime(2019),
-          lastDate: DateTime(20212),
+          lastDate: DateTime(2022),
           builder: (context, child) {
             return Theme(
               data: ThemeData.dark().copyWith(
