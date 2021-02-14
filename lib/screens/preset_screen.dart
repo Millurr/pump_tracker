@@ -26,6 +26,7 @@ class _PresetScreenState extends State<PresetScreen> {
     void _showAddToFrom(String name, String target) {
       showModalBottomSheet(
           context: context,
+          isScrollControlled: true,
           builder: (context) {
             return Container(
               padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 60.0),

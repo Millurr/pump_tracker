@@ -20,7 +20,7 @@ class _AddToFormState extends State<AddToForm> {
   DateTime selectedDate = DateTime.now();
   String date = '';
 
-  final List<int> setSets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  final List<int> setSets = [1, 2, 3, 4, 5];
 
   List<int> sets, weight;
 
@@ -48,7 +48,7 @@ class _AddToFormState extends State<AddToForm> {
           context: context,
           initialDate: selectedDate,
           firstDate: DateTime(2019),
-          lastDate: DateTime(2021),
+          lastDate: DateTime(2022),
           builder: (context, child) {
             return Theme(
               data: ThemeData.dark().copyWith(
@@ -132,7 +132,7 @@ class _AddToFormState extends State<AddToForm> {
         child: ListView(
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.only(top: 30.0, left: 8.0),
               child: Text(
                 "Muscle group: " + widget.target,
                 style: TextStyle(fontSize: 18),
